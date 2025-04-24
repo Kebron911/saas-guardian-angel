@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -34,6 +35,7 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
+  const { setRole } = useAuth();
   
   const menuItems = [
     { 
@@ -68,6 +70,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
   ];
 
+  const handleSwitchToUserView = () => {
+    setRole('user');
+    window.location.href = "/dashboard";
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Layout>
@@ -86,7 +93,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   key={item.path} 
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.path
+                    location.pathname === item.path || 
+                    (item.path !== "/admin" && location.pathname.startsWith(item.path))
                     ? "bg-[#1A237E] text-white"
                     : "text-gray-700 hover:bg-[#F5F5F5] hover:text-foreground"
                   }`}
@@ -118,7 +126,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="ml-64">
           <LayoutHeader className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
             <h1 className="text-xl font-semibold text-foreground">
-              {menuItems.find(item => item.path === location.pathname)?.label || "Admin Dashboard"}
+              {menuItems.find(item => 
+                item.path === location.pathname || 
+                (item.path !== "/admin" && location.pathname.startsWith(item.path))
+              )?.label || "Admin Dashboard"}
             </h1>
             
             <div className="flex items-center space-x-4">
@@ -144,7 +155,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <Button 
                 variant="outline" 
                 className="text-sm"
-                onClick={() => window.location.href = "/dashboard"}
+                onClick={handleSwitchToUserView}
               >
                 Switch to User View
               </Button>

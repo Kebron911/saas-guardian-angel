@@ -18,6 +18,11 @@ import Reports from "@/pages/Reports";
 import AccountSettings from "@/pages/AccountSettings";
 import HelpSupport from "@/pages/HelpSupport";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import AdminUsersPage from "@/pages/admin/AdminUsersPage";
+import AdminFinancePage from "@/pages/admin/AdminFinancePage";
+import AdminReferralsPage from "@/pages/admin/AdminReferralsPage";
+import AdminSupportPage from "@/pages/admin/AdminSupportPage";
+import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -45,11 +50,11 @@ const App = () => (
               
               {/* Admin Dashboard Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<AdminDashboard />} />
-              <Route path="/admin/finance" element={<AdminDashboard />} />
-              <Route path="/admin/referrals" element={<AdminDashboard />} />
-              <Route path="/admin/support" element={<AdminDashboard />} />
-              <Route path="/admin/settings" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin/finance" element={<AdminFinancePage />} />
+              <Route path="/admin/referrals" element={<AdminReferralsPage />} />
+              <Route path="/admin/support" element={<AdminSupportPage />} />
+              <Route path="/admin/settings" element={<AdminSettingsPage />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
