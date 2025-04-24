@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import BlogPage from "@/pages/BlogPage";
 import BlogPostPage from "@/pages/BlogPostPage";
 import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -46,7 +44,6 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/" element={<Index />} />
-              <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogPostPage />} />
               
               {/* User Dashboard Routes */}

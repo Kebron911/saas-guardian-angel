@@ -7,6 +7,8 @@ import HomeBenefitsSection from "@/components/HomeBenefitsSection";
 import HomeHowItWorksSection from "@/components/HomeHowItWorksSection";
 import HomeUseCasesSection from "@/components/HomeUseCasesSection";
 import HomeFAQSection from "@/components/HomeFAQSection";
+import BlogPosts from "@/components/BlogPosts";
+import BlogNewsletter from "@/components/BlogNewsletter";
 
 const HomePage = () => {
   return (
@@ -29,7 +31,7 @@ const HomePage = () => {
                 <li><a href="#how-it-works" className="hover:text-[#00B8D4]">How It Works</a></li>
                 <li><a href="#use-cases" className="hover:text-[#00B8D4]">Use Cases</a></li>
                 <li><a href="#faq" className="hover:text-[#00B8D4]">FAQ</a></li>
-                <li><Link to="/blog" className="hover:text-[#00B8D4]">Blog</Link></li>
+                <li><a href="#blog" className="hover:text-[#00B8D4]">Blog</a></li>
               </ul>
             </nav>
             <div className="flex items-center mt-5 md:mt-0">
@@ -57,6 +59,15 @@ const HomePage = () => {
         <HomeHowItWorksSection />
         <HomeUseCasesSection />
         <HomeFAQSection />
+
+        {/* Blog Section */}
+        <section id="blog" className="py-20 bg-gray-50">
+          <div className="container max-w-[1200px] mx-auto px-5">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1A237E] mb-12">Latest Insights & Updates</h2>
+            <BlogPosts />
+            <BlogNewsletter />
+          </div>
+        </section>
 
         {/* CTA Section */}
         <section className="cta-section bg-[#1A237E] text-white py-20 text-center">
