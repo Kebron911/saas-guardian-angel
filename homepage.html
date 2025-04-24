@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Phone Receptionist | Professional AI Assistants</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-blue: #1A237E;
+            --bright-teal: #00B8D4;
+            --white: #FFFFFF;
+            --warm-gray: #F5F5F5;
+            --coral: #FF6F61;
+            --soft-yellow: #FFF9C4;
+            --light-blue: #E3F2FD;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--white);
+        }
+        
+        h1, h2, h3, h4 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background-color: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            z-index: 100;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--deep-blue);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            background-color: var(--deep-blue);
+            border-radius: 50%;
+            margin-right: 10px;
+            position: relative;
+        }
+        
+        .logo-icon:before {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 12px;
+            background-color: var(--white);
+            border-radius: 50% 50% 0 0;
+            top: 8px;
+            left: 7.5px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 30px;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: var(--bright-teal);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            align-items: center;
+        }
+        
+        .login-btn {
+            background: none;
+            border: 2px solid var(--deep-blue);
+            color: var(--deep-blue);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.3s;
+        }
+        
+        .login-btn:hover {
+            background-color: var(--deep-blue);
+            color: var(--white);
+        }
+        
+        .signup-btn {
+            background-color: var(--bright-teal);
+            border: none;
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .signup-btn:hover {
+            background-color: #009cb8;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 160px 0 100px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--light-blue) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .hero-content {
+            max-width: 600px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: var(--deep-blue);
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        
+        .hero-cta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .hero-btn {
+            background-color: var(--deep-blue);
+            color: var(--white);
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        
+        .hero-btn:hover {
+            background-color: #141c64;
+        }
+        
+        .hero-demo {
+            color: var(--deep-blue);
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .hero-demo svg {
+            margin-right: 8px;
+        }
+        
+        .price-tag {
+            background-color: var(--bright-teal);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .price-tag span {
+            font-size: 16px;
+            margin-left: 5px;
+        }
+        
+        .hero-image {
+            width: 40%;
+            position: relative;
+        }
+        
+        .hero-image img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background-color: var(--white);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-header h2 {
+            font-size: 36px;
+            color: var(--deep-blue);
+            margin-bottom: 15px;
+        }
+        
+        .section-header p {
+            font-size: 18px;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background-color: var(--warm-gray);
+            border-radius: 10px;
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--soft-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: var(--deep-blue);
+        }
+        
+        /* Benefits Section */
+        .benefits {
+            padding: 100px 0;
+            background-color: var(--warm-gray);
+        }
+        
+        .benefits-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .benefits-content {
+            flex-basis: 48%;
+        }
+        
+        .benefits-content h2 {
+            font-size: 36px;
+            color: var(--deep-blue);
+            margin-bottom: 20px;
+        }
+        
+        .benefits-list {
+            list-style: none;
+        }
+        
+        .benefits-list li {
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .benefits-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--bright-teal);
+            font-weight: 700;
+        }
+        
+        .benefits-image {
+            flex-basis: 48%;
+        }
+        
+        .benefits-image img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 0;
+            background-color: var(--white);
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 250px;
+            text-align: center;
+            padding: 0 20px;
+            margin-bottom: 40px;
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background-color: var(--deep-blue);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+        
+        .step h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: var(--deep-blue);
+        }
+        
+        /* Use Cases */
+        .use-cases {
+            padding: 100px 0;
+            background-color: var(--warm-gray);
+        }
+        
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .use-case-card {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .use-case-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .use-case-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--light-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .use-case-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: var(--deep-blue);
+        }
+        
+        /* FAQ */
+        .faq {
+            padding: 100px 0;
+            background-color: var(--white);
+        }
+        
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .faq-item {
+            background-color: var(--warm-gray);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .faq-question {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--deep-blue);
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+            padding-right: 30px;
+        }
+        
+        .faq-question::after {
+            content: "+";
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        
+        .faq-answer {
+            color: #555;
+            display: none;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background-color: var(--deep-blue);
+            color: var(--white);
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-primary {
+            background-color: var(--bright-teal);
+            color: var(--white);
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-weight: 700;
+            text-decoration: none;
+            margin: 0 10px 10px;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        
+        .cta-primary:hover {
+            background-color: #009cb8;
+        }
+        
+        .cta-secondary {
+            background-color: transparent;
+            border: 2px solid var(--white);
+            color: var(--white);
+            padding: 13px 28px;
+            border-radius: 5px;
+            font-weight: 700;
+            text-decoration: none;
+            margin: 0 10px 10px;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        
+        .cta-secondary:hover {
+            background-color: var(--white);
+            color: var(--deep-blue);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: var(--white);
+            padding: 60px 0 30px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-logo {
+            color: var(--white);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .footer-about p {
+            color: #bbb;
+            margin-bottom: 20px;
+        }
+        
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--white);
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--bright-teal);
+        }
+        
+        .social-links {
+            display: flex;
+        }
+        
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: #444;
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .social-link:hover {
+            background-color: var(--bright-teal);
+        }
+        
+        .social-link svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--white);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #444;
+            color: #bbb;
+            font-size: 14px;
+        }
+        
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                padding: 20px 0;
+            }
+            
+            .logo {
+                margin-bottom: 20px;
+            }
+            
+            .cta-buttons {
+                margin-top: 20px;
+            }
+            
+            .hero {
+                padding: 150px 0 80px;
+                text-align: center;
+            }
+            
+            .hero-container {
+                flex-direction: column;
+            }
+            
+            .hero-content {
+                max-width: 100%;
+                margin-bottom: 40px;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero-cta {
+                justify-content: center;
+            }
+            
+            .hero-image {
+                width: 100%;
+            }
+            
+            .benefits-container {
+                flex-direction: column;
+            }
+            
+            .benefits-content, .benefits-image {
+                flex-basis: 100%;
+            }
+            
+            .benefits-image {
+                margin-top: 40px;
+            }
+            
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-container">
+                <a href="#" class="logo">
+                    <div class="logo-icon"></div>
+                    Professional AI Assistants
+                </a>
+                <nav>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#benefits">Benefits</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#use-cases">Use Cases</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
+                </nav>
+                <div class="cta-buttons">
+                    <button class="login-btn">Log In</button>
+                    <button class="signup-btn">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1>AI Phone Receptionist</h1>
+                    <p>Your professionally trained virtual receptionist that handles calls 24/7, routes inquiries, and provides consistent customer service – always on, never a sick day.</p>
+                    <div class="price-tag">$299<span>/month</span></div>
+                    <div class="hero-cta">
+                        <a href="#" class="hero-btn">Start Your 14-Day Trial</a>
+                        <a href="#" class="hero-demo">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="#1A237E" stroke-width="2"/>
+                                <path d="M16 12L10 16V8L16 12Z" fill="#1A237E"/>
+                            </svg>
+                            Watch Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="/api/placeholder/500/350" alt="AI Phone Receptionist in Action" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Key Features of Your AI Phone Receptionist</h2>
+                <p>Designed to handle your business calls with professionalism and efficiency.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 6V12L16 14" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="#1A237E" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>24/7 Availability</h3>
+                    <p>Never miss a call with round-the-clock coverage, even on holidays and weekends.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11L11 13L15 9" stroke="#1A237E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 3H17.4C18.8359 3 19.5544 3 20.0963 3.22836C20.5765 3.42914 20.9709 3.7636 21.2114 4.19621C21.48 4.67717 21.48 5.32294 21.48 6.61447V17.3855C21.48 18.6771 21.48 19.3228 21.2114 19.8038C20.9709 20.2364 20.5765 20.5709 20.0963 20.7716C19.5544 21 18.8359 21 17.4 21H6.6C5.16406 21 4.44609 21 3.90412 20.7716C3.42343 20.5709 3.02915 20.2364 2.78865 19.8038C2.52 19.3228 2.52 18.6771 2.52 17.3855V8.4M2.52 8.4V6.61447C2.52 5.32294 2.52 4.67717 2.78865 4.19621C3.02915 3.7636 3.42343 3.42914 3.90412 3.22836C4.44609 3 5.16406 3 6.6 3H8.4L2.52 8.4Z" stroke="#1A237E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Intelligent Call Routing</h3>
+                    <p>Direct calls to the right department or person based on caller needs and your business rules.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12Z" stroke="#1A237E" stroke-width="2"/>
+                            <path d="M20 20C20 16.6863 16.4183 14 12 14C7.58172 14 4 16.6863 4 20" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Natural Conversations</h3>
+                    <p>Human-like interactions that make callers feel heard and valued, not like they're talking to a bot.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 8L8 16M8 8L16 16" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="#1A237E" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Professional Message Taking</h3>
+                    <p>Accurate message recording with details delivered to your team via email or SMS in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 3H11C6.02944 3 2 7.02944 2 12C2 16.9706 6.02944 21 11 21H13C17.9706 21 22 16.9706 22 12C22 7.02944 17.9706 3 13 3Z" stroke="#1A237E" stroke-width="2"/>
+                            <path d="M12 8V16M16 12H8" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Customizable Scripts</h3>
+                    <p>Tailor your AI receptionist's responses to match your brand voice and handle specific scenarios.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11L11 13L15 9" stroke="#1A237E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="#1A237E" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Call Analytics Dashboard</h3>
+                    <p>Get insights into call volume, peak times, common inquiries, and customer satisfaction.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits" id="benefits">
+        <div class="container">
+            <div class="benefits-container">
+                <div class="benefits-content">
+                    <h2>Business Benefits That Impact Your Bottom Line</h2>
+                    <ul class="benefits-list">
+                        <li><strong>Cost Effective:</strong> Save up to 70% compared to a human receptionist, with no benefits, sick days, or vacation time to manage.</li>
+                        <li><strong>Improved Customer Experience:</strong> Never miss a call and ensure every client interaction starts professionally, increasing satisfaction and retention.</li>
+                        <li><strong>Enhanced Productivity:</strong> Free up your team from answering routine calls so they can focus on high-value tasks.</li>
+                        <li><strong>Scalability:</strong> Handle call volume surges without stress or additional cost, whether it's 10 calls or 100.</li>
+                        <li><strong>Data-Driven Insights:</strong> Get actionable information about customer inquiries to improve your business operations.</li>
+                        <li><strong>Consistent Professionalism:</strong> Maintain the same high standard of service throughout every call, regardless of time or date.</li>
+                        <li><strong>Multi-language Support:</strong> Communicate with international clients in their preferred language without additional staffing.</li>
+                    </ul>
+                </div>
+                <div class="benefits-image">
+                    <img src="/api/placeholder/500/400" alt="Business Benefits of AI Receptionist" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How Your AI Phone Receptionist Works</h2>
+                <p>Getting started is simple and takes less than a day to implement.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Sign Up</h3>
+                    <p>Complete our simple sign-up process and select your AI receptionist's voice, name, and personality traits.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Configure Settings</h3>
+                    <p>Define your business hours, customize greetings, and set up call routing rules through our intuitive dashboard.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Forward Your Number</h3>
+                    <p>Simply forward your existing business line to your new AI receptionist number, or integrate directly with your VoIP system.</p>
+                </div>
+				<div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Go Live</h3>
+                    <p>Your AI receptionist is now ready to answer calls 24/7, providing professional service to your customers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="use-cases" id="use-cases">
+        <div class="container">
+            <div class="section-header">
+                <h2>Perfect For These Business Types</h2>
+                <p>See how our AI phone receptionist is helping businesses across industries.</p>
+            </div>
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <div class="use-case-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 8L17 3H7L5 8" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M2 8H22V16C22 18.2091 20.2091 20 18 20H6C3.79086 20 2 18.2091 2 16V8Z" stroke="#1A237E" stroke-width="2"/>
+                            <path d="M12 12C12 10.8954 12.8954 10 14 10C15.1046 10 16 10.8954 16 12C16 13.1046 15.1046 14 14 14H10C8.89543 14 8 13.1046 8 12C8 10.8954 8.89543 10 10 10C11.1046 10 12 10.8954 12 12Z" stroke="#1A237E" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Professional Services</h3>
+                    <p>Law firms, accounting offices, and consultancies that need to capture every potential client call without interrupting important client work.</p>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 5H21V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5Z" stroke="#1A237E" stroke-width="2"/>
+                            <path d="M3 5V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V5" stroke="#1A237E" stroke-width="2"/>
+                            <path d="M9 12L11 14L15 10" stroke="#1A237E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Medical Practices</h3>
+                    <p>Doctors, dentists, and therapists who need to manage appointments and emergencies while providing attentive patient care.</p>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 21V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V21L12 17L3 21Z" stroke="#1A237E" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Real Estate Offices</h3>
+                    <p>Property management companies and real estate agents who need to capture leads and handle tenant inquiries while showing properties.</p>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 3L17 5L21 9L9 21H5V17L15 7V3Z" stroke="#1A237E" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Small Businesses</h3>
+                    <p>Retailers, service providers, and entrepreneurs who can't afford to hire a full-time receptionist but need professional call handling.</p>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 21V5C20 3.89543 19.1046 3 18 3H6C4.89543 3 4 3.89543 4 5V21" stroke="#1A237E" stroke-width="2"/>
+                            <path d="M2 21H22" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M8 8H16" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M8 13H16" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>E-commerce Businesses</h3>
+                    <p>Online retailers who need to provide human-like customer service and order support without the overhead of call center staff.</p>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 6L3 6" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M21 12L3 12" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M21 18L3 18" stroke="#1A237E" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Home Service Providers</h3>
+                    <p>Plumbers, electricians, and contractors who need to capture service calls while they're working on job sites.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="section-header">
+                <h2>Frequently Asked Questions</h2>
+                <p>Get answers to common questions about our AI Phone Receptionist service.</p>
+            </div>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">How does the AI receptionist sound? Do callers know it's AI?</div>
+                    <div class="faq-answer">Our AI receptionist uses advanced natural language processing and voice synthesis to sound remarkably human. In our tests, over 90% of callers couldn't tell they were speaking with an AI. You can choose from several voice profiles that match your brand's personality.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">What happens if the AI can't answer a question?</div>
+                    <div class="faq-answer">The AI is trained to handle a wide range of common business inquiries. For situations it can't address, it will politely take a message and notify your team immediately via email or SMS so you can follow up promptly.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Can I customize what the AI receptionist says?</div>
+                    <div class="faq-answer">Absolutely! You can customize greetings, responses to common questions, and even create specific scripts for different types of calls. Our dashboard makes it easy to update these settings anytime.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How do I set up call forwarding to my team?</div>
+                    <div class="faq-answer">You can set up detailed call routing rules in our dashboard. For example, you can forward sales calls to your sales team, route technical questions to support, and send urgent matters directly to management. You can also set different rules based on time of day or day of week.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">What if I need to change my plan or cancel?</div>
+                    <div class="faq-answer">You can upgrade, downgrade, or cancel your plan at any time through your account dashboard. We don't lock you into long-term contracts, and you can export your call data if you decide to move to another solution.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is there a limit to how many calls the AI can handle?</div>
+                    <div class="faq-answer">No! One of the biggest advantages of our AI receptionist is that it can handle unlimited concurrent calls. Whether you receive 5 or 500 calls simultaneously, each caller gets the same professional experience without wait times.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How secure is the call data?</div>
+                    <div class="faq-answer">We take security seriously. All call data is encrypted in transit and at rest. We're compliant with GDPR, CCPA, and other privacy regulations. You can set custom retention policies for call recordings and transcripts to meet your industry's regulatory requirements.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Can the AI receptionist handle different languages?</div>
+                    <div class="faq-answer">Yes! Our AI can communicate fluently in over 30 languages, including Spanish, French, German, Mandarin, and more. You can set a primary language and enable automatic language detection to serve international callers.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Start Your AI Receptionist Trial Today</h2>
+            <p>Join thousands of businesses already saving time and money while providing better customer service. Try it risk-free with our 14-day money-back guarantee.</p>
+            <div class="cta-buttons">
+                <a href="#" class="cta-primary">Start Your Free Trial</a>
+                <a href="#" class="cta-secondary">Schedule a Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <a href="#" class="footer-logo">Professional AI Assistants</a>
+                    <p>We create AI solutions that help businesses operate more efficiently and provide better customer experiences.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 2H15C13.6739 2 12.4021 2.52678 11.4645 3.46447C10.5268 4.40215 10 5.67392 10 7V10H7V14H10V22H14V14H17L18 10H14V7C14 6.73478 14.1054 6.48043 14.2929 6.29289C14.4804 6.10536 14.7348 6 15 6H18V2Z" fill="white"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M23 3.01006C22.0424 3.68553 20.9821 4.20217 19.86 4.54006C19.2577 3.84757 18.4573 3.35675 17.567 3.13398C16.6767 2.91122 15.7395 2.96725 14.8821 3.29451C14.0247 3.62177 13.2884 4.20446 12.773 4.96377C12.2575 5.72309 11.9877 6.62239 12 7.54006V8.54006C10.2426 8.58562 8.50127 8.19587 6.93101 7.4055C5.36074 6.61513 4.01032 5.44869 3 4.01006C3 4.01006 -1 13.0101 8 17.0101C5.94053 18.408 3.48716 19.109 1 19.0101C10 24.0101 21 19.0101 21 7.51006C20.9991 7.23151 20.9723 6.95365 20.92 6.68006C21.9406 5.67355 22.6608 4.40277 23 3.01006Z" fill="white"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16 8C17.5913 8 19.1174 8.63214 20.2426 9.75736C21.3679 10.8826 22 12.4087 22 14V21H18V14C18 13.4696 17.7893 12.9609 17.4142 12.5858C17.0391 12.2107 16.5304 12 16 12C15.4696 12 14.9609 12.2107 14.5858 12.5858C14.2107 12.9609 14 13.4696 14 14V21H10V14C10 12.4087 10.6321 10.8826 11.7574 9.75736C12.8826 8.63214 14.4087 8 16 8Z" fill="white"/>
+                                <path d="M6 9H2V21H6V9Z" fill="white"/>
+                                <path d="M4 6C5.10457 6 6 5.10457 6 4C6 2.89543 5.10457 2 4 2C2.89543 2 2 2.89543 2 4C2 5.10457 2.89543 6 4 6Z" fill="white"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C14.717 2 15.056 2.01 16.122 2.06C17.187 2.11 17.912 2.277 18.55 2.525C19.21 2.779 19.766 3.123 20.322 3.678C20.8305 4.1779 21.224 4.78259 21.475 5.45C21.722 6.087 21.89 6.813 21.94 7.878C21.987 8.944 22 9.283 22 12C22 14.717 21.99 15.056 21.94 16.122C21.89 17.187 21.722 17.912 21.475 18.55C21.2247 19.2178 20.8311 19.8226 20.322 20.322C19.822 20.8303 19.2173 21.2238 18.55 21.475C17.913 21.722 17.187 21.89 16.122 21.94C15.056 21.987 14.717 22 12 22C9.283 22 8.944 21.99 7.878 21.94C6.813 21.89 6.088 21.722 5.45 21.475C4.78233 21.2245 4.17753 20.8309 3.678 20.322C3.16941 19.8222 2.77593 19.2175 2.525 18.55C2.277 17.913 2.11 17.187 2.06 16.122C2.013 15.056 2 14.717 2 12C2 9.283 2.01 8.944 2.06 7.878C2.11 6.812 2.277 6.088 2.525 5.45C2.77524 4.78218 3.1688 4.17732 3.678 3.678C4.17767 3.16923 4.78243 2.77573 5.45 2.525C6.088 2.277 6.812 2.11 7.878 2.06C8.944 2.013 9.283 2 12 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17.5 6.5H17.51" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Product</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">Integrations</a></li>
+                        <li><a href="#">Enterprise</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Guides</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Partners</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Security</a></li>
+                        <li><a href="#">GDPR Compliance</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 Professional AI Assistants. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple script to toggle FAQ answers
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                if (answer.style.display === 'block') {
+                    answer.style.display = 'none';
+                    question.style.fontWeight = '700';
+                    question.style.color = 'var(--deep-blue)';
+                    question.innerHTML = question.innerHTML.replace('−', '+');
+                } else {
+                    answer.style.display = 'block';
+                    question.style.fontWeight = '700';
+                    question.style.color = 'var(--bright-teal)';
+                    question.innerHTML = question.innerHTML.replace('+', '−');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
