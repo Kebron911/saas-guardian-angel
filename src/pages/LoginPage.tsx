@@ -7,17 +7,29 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { setRole } = useAuth();
   const [showPassword, setShowPassword] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [selectedRole, setSelectedRole] = React.useState<"user" | "admin">("user");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo purposes, navigate to dashboard on submit
-    navigate("/dashboard");
+    
+    // Set the role in our auth context
+    setRole(selectedRole);
+    
+    // Navigate to the appropriate dashboard
+    if (selectedRole === "admin") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -83,6 +95,25 @@ const LoginPage = () => {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Role selection for testing */}
+            <div className="border-t border-gray-200 pt-4">
+              <Label className="mb-3 block">Login as:</Label>
+              <RadioGroup 
+                value={selectedRole} 
+                onValueChange={(val: "user" | "admin") => setSelectedRole(val)}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="user" id="user" />
+                  <Label htmlFor="user">Regular User</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="admin" id="admin" />
+                  <Label htmlFor="admin">Admin</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <div className="flex items-center justify-between">

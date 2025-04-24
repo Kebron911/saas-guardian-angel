@@ -9,13 +9,14 @@ import {
 } from "@/components/ui/layout";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
-  BarChart3, 
-  Settings, 
-  Home, 
-  MessageSquare, 
-  HelpCircle, 
-  Bell, 
+  BarChart3,
+  Users,
+  Settings,
+  Home,
+  HelpCircle,
+  Bell,
   LogOut,
+  CreditCard,
   Link as LinkIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,53 +27,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
 
-interface DashboardLayoutProps {
+interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
-  const { role, setRole } = useAuth();
   
   const menuItems = [
     { 
       icon: <Home className="w-5 h-5" />, 
       label: "Dashboard", 
-      path: "/dashboard" 
+      path: "/admin" 
     },
     { 
-      icon: <MessageSquare className="w-5 h-5" />, 
-      label: "Receptionist Setup", 
-      path: "/dashboard/setup" 
+      icon: <Users className="w-5 h-5" />, 
+      label: "Users", 
+      path: "/admin/users" 
     },
     { 
-      icon: <BarChart3 className="w-5 h-5" />, 
-      label: "Reports", 
-      path: "/dashboard/reports" 
+      icon: <CreditCard className="w-5 h-5" />, 
+      label: "Finance", 
+      path: "/admin/finance" 
     },
     { 
       icon: <LinkIcon className="w-5 h-5" />, 
-      label: "Affiliate Program", 
-      path: "/dashboard/affiliate" 
-    },
-    { 
-      icon: <Settings className="w-5 h-5" />, 
-      label: "Account Settings", 
-      path: "/dashboard/settings" 
+      label: "Referrals", 
+      path: "/admin/referrals" 
     },
     { 
       icon: <HelpCircle className="w-5 h-5" />, 
-      label: "Help & Support", 
-      path: "/dashboard/help" 
+      label: "Support", 
+      path: "/admin/support" 
+    },
+    { 
+      icon: <Settings className="w-5 h-5" />, 
+      label: "Settings", 
+      path: "/admin/settings" 
     },
   ];
-
-  const handleSwitchToAdminView = () => {
-    setRole('admin');
-    window.location.href = "/admin";
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,17 +77,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="w-[30px] h-[30px] bg-[#1A237E] rounded-full mr-3 relative">
                 <div className="absolute w-[15px] h-[12px] bg-white rounded-t-full top-2 left-[7px]" />
               </div>
-              <span>AI Assistants</span>
+              <span>Admin Panel</span>
             </Link>
             
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               {menuItems.map((item) => (
                 <Link 
                   key={item.path} 
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                     location.pathname === item.path
-                    ? "bg-[#F5F5F5] text-foreground"
+                    ? "bg-[#1A237E] text-white"
                     : "text-gray-700 hover:bg-[#F5F5F5] hover:text-foreground"
                   }`}
                 >
@@ -108,11 +102,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <div className="flex items-center">
               <Avatar className="h-9 w-9">
                 <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>AD</AvatarFallback>
               </Avatar>
               <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-gray-500 truncate">Premier Dental</p>
+                <p className="text-sm font-medium">Admin User</p>
+                <p className="text-xs text-gray-500 truncate">admin@example.com</p>
               </div>
               <Button variant="ghost" size="icon" className="ml-1">
                 <LogOut className="h-5 w-5" />
@@ -124,7 +118,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="ml-64">
           <LayoutHeader className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
             <h1 className="text-xl font-semibold text-foreground">
-              {menuItems.find(item => item.path === location.pathname)?.label || "Dashboard"}
+              {menuItems.find(item => item.path === location.pathname)?.label || "Admin Dashboard"}
             </h1>
             
             <div className="flex items-center space-x-4">
@@ -150,9 +144,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Button 
                 variant="outline" 
                 className="text-sm"
-                onClick={handleSwitchToAdminView}
+                onClick={() => window.location.href = "/dashboard"}
               >
-                <span className="text-[#00B8D4] mr-1">+</span> Switch to Admin View
+                Switch to User View
               </Button>
             </div>
           </LayoutHeader>
@@ -166,4 +160,4 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   );
 };
 
-export default DashboardLayout;
+export default AdminLayout;
