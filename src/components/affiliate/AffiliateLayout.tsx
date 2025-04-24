@@ -9,14 +9,17 @@ import {
 } from "@/components/ui/layout";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
-  BarChart3, 
-  Settings, 
-  Home, 
-  MessageSquare, 
-  HelpCircle, 
-  Bell, 
+  BarChart3,
+  Settings,
+  Home,
+  MessageSquare,
+  HelpCircle,
+  Bell,
   LogOut,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Share,
+  DollarSign,
+  FileImage
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,55 +31,50 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface DashboardLayoutProps {
+interface AffiliateLayoutProps {
   children: React.ReactNode;
 }
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
   const location = useLocation();
-  const { role, setRole } = useAuth();
+  const { setRole } = useAuth();
   
   const menuItems = [
     { 
       icon: <Home className="w-5 h-5" />, 
       label: "Dashboard", 
-      path: "/dashboard" 
-    },
-    { 
-      icon: <MessageSquare className="w-5 h-5" />, 
-      label: "Receptionist Setup", 
-      path: "/dashboard/setup" 
+      path: "/affiliate" 
     },
     { 
       icon: <BarChart3 className="w-5 h-5" />, 
-      label: "Reports", 
-      path: "/dashboard/reports" 
+      label: "Performance", 
+      path: "/affiliate/performance" 
     },
     { 
-      icon: <LinkIcon className="w-5 h-5" />, 
-      label: "Affiliate Program", 
-      path: "/dashboard/affiliate" 
+      icon: <FileImage className="w-5 h-5" />, 
+      label: "Marketing Assets", 
+      path: "/affiliate/marketing" 
     },
     { 
-      icon: <Settings className="w-5 h-5" />, 
-      label: "Account Settings", 
-      path: "/dashboard/settings" 
+      icon: <DollarSign className="w-5 h-5" />, 
+      label: "Payouts", 
+      path: "/affiliate/payouts" 
     },
     { 
       icon: <HelpCircle className="w-5 h-5" />, 
-      label: "Help & Support", 
-      path: "/dashboard/help" 
+      label: "Support", 
+      path: "/affiliate/support" 
+    },
+    { 
+      icon: <Settings className="w-5 h-5" />, 
+      label: "Settings", 
+      path: "/affiliate/settings" 
     },
   ];
 
-  const handleSwitchToAdminView = () => {
-    setRole('admin');
-    window.location.href = "/admin";
-  };
-  
-  const handleSwitchToAffiliateView = () => {
-    setRole('affiliate');
-    window.location.href = "/affiliate";
+  const handleSwitchToUserView = () => {
+    setRole('user');
+    window.location.href = "/dashboard";
   };
 
   return (
@@ -88,17 +86,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="w-[30px] h-[30px] bg-[#1A237E] rounded-full mr-3 relative">
                 <div className="absolute w-[15px] h-[12px] bg-white rounded-t-full top-2 left-[7px]" />
               </div>
-              <span>AI Assistants</span>
+              <span>Affiliate Program</span>
             </Link>
             
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               {menuItems.map((item) => (
                 <Link 
                   key={item.path} 
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.path
-                    ? "bg-[#F5F5F5] text-foreground"
+                    location.pathname === item.path || 
+                    (item.path !== "/affiliate" && location.pathname.startsWith(item.path))
+                    ? "bg-[#1A237E] text-white"
                     : "text-gray-700 hover:bg-[#F5F5F5] hover:text-foreground"
                   }`}
                 >
@@ -113,11 +112,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <div className="flex items-center">
               <Avatar className="h-9 w-9">
                 <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>AF</AvatarFallback>
               </Avatar>
               <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-gray-500 truncate">Premier Dental</p>
+                <p className="text-sm font-medium">John Smith</p>
+                <p className="text-xs text-gray-500 truncate">Affiliate Partner</p>
               </div>
               <Button variant="ghost" size="icon" className="ml-1">
                 <LogOut className="h-5 w-5" />
@@ -129,7 +128,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="ml-64">
           <LayoutHeader className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
             <h1 className="text-xl font-semibold text-foreground">
-              {menuItems.find(item => item.path === location.pathname)?.label || "Dashboard"}
+              {menuItems.find(item => 
+                item.path === location.pathname || 
+                (item.path !== "/affiliate" && location.pathname.startsWith(item.path))
+              )?.label || "Affiliate Dashboard"}
             </h1>
             
             <div className="flex items-center space-x-4">
@@ -152,23 +154,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  className="text-sm"
-                  onClick={handleSwitchToAdminView}
-                >
-                  <span className="text-[#00B8D4] mr-1">+</span> Switch to Admin View
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="text-sm"
-                  onClick={handleSwitchToAffiliateView}
-                >
-                  <span className="text-[#FF6F61] mr-1">+</span> Switch to Affiliate View
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                className="text-sm"
+                onClick={handleSwitchToUserView}
+              >
+                Switch to User View
+              </Button>
             </div>
           </LayoutHeader>
           
@@ -181,4 +173,4 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   );
 };
 
-export default DashboardLayout;
+export default AffiliateLayout;

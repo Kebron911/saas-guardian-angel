@@ -15,7 +15,7 @@ import {
   MessageSquare,
   HelpCircle
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import AffiliateLayout from "@/components/affiliate/AffiliateLayout";
 import { 
   Card, 
   CardContent, 
@@ -86,7 +86,7 @@ const AffiliateDashboard = () => {
   };
 
   return (
-    <DashboardLayout>
+    <AffiliateLayout>
       <div className="space-y-6">
         {/* Welcome Panel */}
         <Card className="bg-gradient-to-r from-[#1A237E]/10 to-[#00B8D4]/10">
@@ -444,7 +444,7 @@ const AffiliateDashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </AffiliateLayout>
   );
 };
 

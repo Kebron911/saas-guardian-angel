@@ -16,7 +16,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [selectedRole, setSelectedRole] = React.useState<"user" | "admin">("user");
+  const [selectedRole, setSelectedRole] = React.useState<"user" | "admin" | "affiliate">("user");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +27,8 @@ const LoginPage = () => {
     // Navigate to the appropriate dashboard
     if (selectedRole === "admin") {
       navigate("/admin");
+    } else if (selectedRole === "affiliate") {
+      navigate("/affiliate");
     } else {
       navigate("/dashboard");
     }
@@ -102,8 +104,8 @@ const LoginPage = () => {
               <Label className="mb-3 block">Login as:</Label>
               <RadioGroup 
                 value={selectedRole} 
-                onValueChange={(val: "user" | "admin") => setSelectedRole(val)}
-                className="flex space-x-4"
+                onValueChange={(val: "user" | "admin" | "affiliate") => setSelectedRole(val)}
+                className="flex flex-wrap space-x-4"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="user" id="user" />
@@ -112,6 +114,10 @@ const LoginPage = () => {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="admin" id="admin" />
                   <Label htmlFor="admin">Admin</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="affiliate" id="affiliate" />
+                  <Label htmlFor="affiliate">Affiliate</Label>
                 </div>
               </RadioGroup>
             </div>

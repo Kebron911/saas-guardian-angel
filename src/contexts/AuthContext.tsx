@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-type Role = 'user' | 'admin';
+type Role = 'user' | 'admin' | 'affiliate';
 
 interface AuthContextType {
   role: Role;
