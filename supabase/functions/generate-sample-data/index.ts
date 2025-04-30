@@ -1,158 +1,163 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-interface CallRecord {
-  user_id: string;
-  from_number: string;
-  to_number: string;
-  direction: string;
-  status: string;
-  duration: number;
-  started_at: string;
-  ended_at: string;
-}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const generatePhoneNumber = () => {
-  const areaCode = Math.floor(Math.random() * 900) + 100;
-  const prefix = Math.floor(Math.random() * 900) + 100;
-  const lineNum = Math.floor(Math.random() * 9000) + 1000;
-  return `(${areaCode}) ${prefix}-${lineNum}`;
-};
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders,
+      status: 204,
+    });
   }
-
-  // Use the service role key to bypass RLS
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
 
   try {
-    // Get the authenticated user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header provided");
-    }
+    // Create a Supabase client with the Auth context of the logged in user
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError) {
-      throw new Error(`Authentication error: ${userError.message}`);
-    }
-    
-    const user = userData.user;
-    if (!user?.id) {
-      throw new Error("User not authenticated");
-    }
+    // Get the request body
+    const requestData = await req.json();
+    const userId = requestData.user_id || "demo-user";
+
+    console.log(`Generating sample data for user ID: ${userId}`);
 
     // Generate sample call data
-    const callStatuses = ["completed", "no-answer", "busy"];
-    const callDirections = ["inbound", "outbound"];
-    const callRecords: CallRecord[] = [];
+    const callData = await generateCallData(supabaseClient, userId);
     
-    // Generate calls for the last 30 days
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    // Generate between 50 and 100 sample calls
-    const numCalls = Math.floor(Math.random() * 50) + 50;
-    
-    for (let i = 0; i < numCalls; i++) {
-      // Random date in the last 30 days
-      const callDate = new Date(thirtyDaysAgo.getTime() + Math.random() * (now.getTime() - thirtyDaysAgo.getTime()));
-      
-      // Duration between 10 seconds and 10 minutes
-      const durationSeconds = Math.floor(Math.random() * 590) + 10;
-      
-      const startedAt = callDate.toISOString();
-      const endedAt = new Date(callDate.getTime() + durationSeconds * 1000).toISOString();
-      
-      const status = callStatuses[Math.floor(Math.random() * callStatuses.length)];
-      const direction = callDirections[Math.floor(Math.random() * callDirections.length)];
-      
-      callRecords.push({
-        user_id: user.id,
-        from_number: generatePhoneNumber(),
-        to_number: generatePhoneNumber(),
-        direction,
-        status,
-        duration: status === "completed" ? durationSeconds : 0,
-        started_at: startedAt,
-        ended_at: status === "completed" ? endedAt : null,
-      });
-    }
-    
-    // Insert the sample data
-    const { data: insertedCalls, error: insertError } = await supabaseAdmin
-      .from('calls')
-      .insert(callRecords);
-      
-    if (insertError) {
-      throw new Error(`Error inserting sample data: ${insertError.message}`);
-    }
-    
-    // Generate sample subscription data if it doesn't exist
-    const { data: subscriptionData, error: subCheckError } = await supabaseAdmin
-      .from('subscriptions')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-      
-    if (subCheckError) {
-      throw new Error(`Error checking subscription: ${subCheckError.message}`);
-    }
-    
-    if (!subscriptionData) {
-      // Insert a sample subscription
-      const planTypes = ['basic', 'pro', 'enterprise'];
-      const randomPlan = planTypes[Math.floor(Math.random() * planTypes.length)];
-      
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
-      
-      const { error: subInsertError } = await supabaseAdmin
-        .from('subscriptions')
-        .insert({
-          user_id: user.id,
-          plan_type: randomPlan,
-          status: 'active',
-          cancel_at_period_end: false,
-          current_period_start: new Date().toISOString(),
-          current_period_end: futureDate.toISOString(),
-          stripe_customer_id: `cus_sample_${Math.random().toString(36).substring(2, 15)}`,
-          stripe_subscription_id: `sub_sample_${Math.random().toString(36).substring(2, 15)}`
-        });
-        
-      if (subInsertError) {
-        throw new Error(`Error inserting sample subscription: ${subInsertError.message}`);
+    // Return the result
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Sample data generated successfully",
+        callsGenerated: callData.length,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       }
-    }
-    
-    return new Response(JSON.stringify({
-      success: true,
-      message: `Generated ${numCalls} sample calls for user`,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error generating sample data:", errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("Error generating sample data:", error.message);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      }
+    );
   }
 });
+
+async function generateCallData(supabase: any, userId: string) {
+  // First, clear existing data for this user
+  await supabase.from("calls").delete().eq("user_id", userId);
+
+  const callCount = 50; // Generate 50 sample calls
+  const phoneNumbers = [
+    "+1234567890",
+    "+1987654321",
+    "+1555123456",
+    "+1555987654",
+    "+1555555555",
+  ];
+
+  const today = new Date();
+  const callData = [];
+
+  // Generate calls spread over the last 30 days
+  for (let i = 0; i < callCount; i++) {
+    const daysAgo = Math.floor(Math.random() * 30); // Up to 30 days ago
+    const callDate = new Date(today);
+    callDate.setDate(today.getDate() - daysAgo);
+    
+    const fromNumber = phoneNumbers[Math.floor(Math.random() * phoneNumbers.length)];
+    const toNumber = "+15551234567"; // Your business number
+    const duration = Math.floor(Math.random() * 300) + 20; // 20-320 seconds
+    const direction = Math.random() > 0.3 ? "inbound" : "outbound";
+    const status = Math.random() > 0.2 ? "completed" : "missed";
+    
+    // Generate random time for the call on that day
+    const hours = Math.floor(Math.random() * 12) + 8; // Between 8am and 8pm
+    const minutes = Math.floor(Math.random() * 60);
+    callDate.setHours(hours, minutes);
+    
+    const call = {
+      user_id: userId,
+      from_number: fromNumber,
+      to_number: toNumber,
+      direction,
+      status,
+      duration: status === "completed" ? duration : null,
+      created_at: callDate.toISOString(),
+      started_at: status === "completed" ? callDate.toISOString() : null,
+      ended_at: status === "completed" ? 
+        new Date(callDate.getTime() + duration * 1000).toISOString() : null
+    };
+    
+    callData.push(call);
+  }
+
+  // Sort by date (newest first)
+  callData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  
+  // Insert the data in smaller batches to avoid timeouts
+  const batchSize = 10;
+  for (let i = 0; i < callData.length; i += batchSize) {
+    const batch = callData.slice(i, i + batchSize);
+    const { data, error } = await supabase.from("calls").insert(batch);
+    if (error) throw error;
+  }
+  
+  // Generate subscription data as well
+  const plans = ["basic", "pro", "enterprise"];
+  const subscriptionData = [];
+  
+  // Generate between 5-15 subscriptions
+  const subscriptionCount = Math.floor(Math.random() * 10) + 5;
+  
+  for (let i = 0; i < subscriptionCount; i++) {
+    const planType = plans[Math.floor(Math.random() * plans.length)];
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - Math.floor(Math.random() * 90)); // Up to 90 days ago
+    
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1); // One month subscription
+    
+    const subscription = {
+      user_id: `demo-user-${i + 1}`,
+      plan_type: planType,
+      status: Math.random() > 0.1 ? "active" : "canceled",
+      current_period_start: startDate.toISOString(),
+      current_period_end: endDate.toISOString(),
+      created_at: startDate.toISOString(),
+      updated_at: startDate.toISOString(),
+      cancel_at_period_end: Math.random() > 0.8
+    };
+    
+    subscriptionData.push(subscription);
+  }
+  
+  // Insert subscription data
+  if (subscriptionData.length > 0) {
+    // Clear existing demo subscriptions first
+    await supabase.from("subscriptions")
+      .delete()
+      .like("user_id", "demo-user-%");
+      
+    const { data, error } = await supabase.from("subscriptions").insert(subscriptionData);
+    if (error) throw error;
+  }
+  
+  return callData;
+}

@@ -4,16 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Database } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const GenerateSampleData = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleGenerateSampleData = async () => {
     try {
       setIsGenerating(true);
       
-      const { data, error } = await supabase.functions.invoke('generate-sample-data', {});
+      // Add user_id to the payload
+      const { data, error } = await supabase.functions.invoke('generate-sample-data', {
+        body: { user_id: user?.id }
+      });
 
       if (error) {
         throw new Error(error.message);

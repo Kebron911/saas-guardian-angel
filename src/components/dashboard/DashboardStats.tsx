@@ -5,8 +5,12 @@ import { Headphones, Clock, CalendarDays, RefreshCcw, Check } from "lucide-react
 import { Badge } from "@/components/ui/badge";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-export const DashboardStats = () => {
-  const { stats, isLoading } = useDashboardData();
+interface DashboardStatsProps {
+  filter?: string;
+}
+
+export const DashboardStats = ({ filter = 'month' }: DashboardStatsProps) => {
+  const { stats, isLoading } = useDashboardData(filter);
 
   if (isLoading) {
     return (
@@ -24,15 +28,18 @@ export const DashboardStats = () => {
     );
   }
 
+  const timeframeText = filter === 'month' ? 'This Month' : 
+                        filter === 'week' ? 'This Week' : 'Selected Period';
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
       <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Calls This Month</p>
+              <p className="text-sm font-medium text-gray-500">Calls {timeframeText}</p>
               <p className="text-3xl font-bold mt-2">{stats.totalCalls}</p>
-              <p className="text-sm text-green-600 font-medium mt-1">+12% from last month</p>
+              <p className="text-sm text-green-600 font-medium mt-1">+12% from last period</p>
             </div>
             <div className="rounded-full bg-blue-100 p-3">
               <Headphones className="w-6 h-6 text-[#1A237E]" />
@@ -47,7 +54,7 @@ export const DashboardStats = () => {
             <div>
               <p className="text-sm font-medium text-gray-500">Avg. Call Duration</p>
               <p className="text-3xl font-bold mt-2">{stats.avgDuration}</p>
-              <p className="text-sm text-gray-500 font-medium mt-1">Across all calls this month</p>
+              <p className="text-sm text-gray-500 font-medium mt-1">Across all calls</p>
             </div>
             <div className="rounded-full bg-blue-100 p-3">
               <Clock className="w-6 h-6 text-[#1A237E]" />

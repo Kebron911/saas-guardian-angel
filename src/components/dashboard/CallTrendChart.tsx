@@ -4,8 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-export const CallTrendChart = () => {
-  const { callTrends, isLoading } = useDashboardData();
+interface CallTrendChartProps {
+  filter?: string;
+}
+
+export const CallTrendChart = ({ filter = 'month' }: CallTrendChartProps) => {
+  const { callTrends, isLoading } = useDashboardData(filter);
 
   if (isLoading) {
     return (
@@ -33,14 +37,19 @@ export const CallTrendChart = () => {
     }
   });
 
+  const timeframeText = filter === 'month' ? 'Last Month' : 
+                        filter === 'week' ? 'Last Week' : 'Selected Period';
+
   return (
     <Card className="lg:col-span-2 shadow-sm">
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-gray-800">Call Trend</h3>
-          <div className="text-sm text-teal-600">
-            ↑ Bookings peak on {peakDay}s
-          </div>
+          <h3 className="font-semibold text-gray-800">Call Trend ({timeframeText})</h3>
+          {peakDay && (
+            <div className="text-sm text-teal-600">
+              ↑ Bookings peak on {peakDay}s
+            </div>
+          )}
         </div>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">

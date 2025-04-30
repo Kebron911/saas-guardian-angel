@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { addDays, format, subDays, subMonths } from 'date-fns';
 
 interface DashboardStats {
   totalCalls: number;
@@ -17,7 +18,7 @@ interface CallTrend {
   bookings: number;
 }
 
-export function useDashboardData() {
+export function useDashboardData(filter = 'month') {
   const auth = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
@@ -40,12 +41,27 @@ export function useDashboardData() {
       try {
         setIsLoading(true);
         
-        // Fetch total calls count
+        // Set date range based on filter
+        let startDate = new Date();
+        if (filter === 'month') {
+          startDate = subMonths(new Date(), 1);
+        } else if (filter === 'week') {
+          startDate = subDays(new Date(), 7);
+        } else {
+          // Custom filter - default to last 30 days
+          startDate = subDays(new Date(), 30);
+        }
+        
+        // Format date for Supabase query
+        const formattedStartDate = startDate.toISOString();
+        
+        // Fetch all calls within the date range
         const { data: callsData, error: callsError } = await supabase
           .from('calls')
-          .select('id, duration')
-          .eq('user_id', auth.user.id);
-        
+          .select('id, duration, status, created_at')
+          .gte('created_at', formattedStartDate)
+          .order('created_at', { ascending: false });
+
         if (callsError) throw callsError;
         
         // Calculate stats from calls data
@@ -61,26 +77,36 @@ export function useDashboardData() {
         const remainingSeconds = avgSeconds % 60;
         const avgDuration = `${avgMinutes}m ${remainingSeconds}s`;
         
-        // Count bookings (this is a placeholder - you would need a bookings table or a field in calls)
-        const bookingsMade = Math.floor(totalCalls * 0.3); // Simulating 30% booking rate
+        // Count bookings (for demo, we'll assume calls with duration > 60 seconds led to bookings)
+        const bookingsMade = callsData.filter(call => (call.duration || 0) > 60).length;
         
-        // Missed calls recovered (placeholder)
-        const missedCallsRecovered = Math.floor(totalCalls * 0.1); // Simulating 10% recovery rate
+        // Count missed calls recovered (calls that were initially missed but had follow-up)
+        const missedCallsRecovered = callsData.filter(call => 
+          call.status === 'missed' && callsData.some(c => 
+            c.created_at > call.created_at
+          )
+        ).length;
         
-        // Generate call trends for the last 7 days
+        // Generate call trends for the last 7 days (or based on filter)
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const trends: CallTrend[] = [];
         
         const today = new Date();
+        const daysToShow = filter === 'week' ? 7 : 14;
         
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - i);
+        for (let i = daysToShow - 1; i >= 0; i--) {
+          const date = subDays(today, i);
           const dayName = days[date.getDay()];
+          const dayFormatted = format(date, 'yyyy-MM-dd');
           
-          // Count calls for this day (would be better with a proper date range query)
-          const dayCallCount = Math.floor(Math.random() * 40) + 10; // Placeholder
-          const bookingsCount = Math.floor(dayCallCount * 0.4); // Simulating 40% booking rate
+          // Count calls for this day
+          const dayCalls = callsData.filter(call => {
+            const callDate = new Date(call.created_at);
+            return format(callDate, 'yyyy-MM-dd') === dayFormatted;
+          });
+          
+          const dayCallCount = dayCalls.length;
+          const bookingsCount = dayCalls.filter(call => (call.duration || 0) > 60).length;
           
           trends.push({
             day: dayName,
@@ -94,7 +120,7 @@ export function useDashboardData() {
           avgDuration,
           bookingsMade,
           missedCallsRecovered,
-          assistantUptime: '99.9%'
+          assistantUptime: '99.9%'  // This could be calculated from actual service uptime data
         });
         
         setCallTrends(trends);
@@ -108,7 +134,7 @@ export function useDashboardData() {
     };
     
     fetchDashboardData();
-  }, [auth.user?.id]);
+  }, [auth.user?.id, filter]);
   
   return { stats, callTrends, isLoading, error };
 }
