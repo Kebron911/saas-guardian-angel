@@ -9,16 +9,339 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      affiliates: {
+        Row: {
+          commission_rate: number | null
+          created_at: string
+          id: string
+          referral_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referral_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referral_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calls: {
+        Row: {
+          call_sid: string | null
+          created_at: string
+          direction: string
+          duration: number | null
+          ended_at: string | null
+          from_number: string
+          id: string
+          recording_url: string | null
+          started_at: string | null
+          status: string
+          to_number: string
+          transcript: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          call_sid?: string | null
+          created_at?: string
+          direction: string
+          duration?: number | null
+          ended_at?: string | null
+          from_number: string
+          id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status: string
+          to_number: string
+          transcript?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          call_sid?: string | null
+          created_at?: string
+          direction?: string
+          duration?: number | null
+          ended_at?: string | null
+          from_number?: string
+          id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string
+          to_number?: string
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          call_id: string
+          created_at: string
+          id: string
+          is_ai: boolean
+          message_content: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          id?: string
+          is_ai: boolean
+          message_content: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          id?: string
+          is_ai?: boolean
+          message_content?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      receptionist_configs: {
+        Row: {
+          business_hours: Json | null
+          business_name: string | null
+          created_at: string
+          custom_instructions: string | null
+          fallback_message: string | null
+          greeting_message: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          voice_type: string | null
+        }
+        Insert: {
+          business_hours?: Json | null
+          business_name?: string | null
+          created_at?: string
+          custom_instructions?: string | null
+          fallback_message?: string | null
+          greeting_message?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          voice_type?: string | null
+        }
+        Update: {
+          business_hours?: Json | null
+          business_name?: string | null
+          created_at?: string
+          custom_instructions?: string | null
+          fallback_message?: string | null
+          greeting_message?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          voice_type?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          affiliate_id: string
+          commission_amount: number | null
+          created_at: string
+          id: string
+          referred_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          commission_amount?: number | null
+          created_at?: string
+          id?: string
+          referred_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          commission_amount?: number | null
+          created_at?: string
+          id?: string
+          referred_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_type: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voicemails: {
+        Row: {
+          call_id: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          recording_url: string | null
+          transcript: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          recording_url?: string | null
+          transcript?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          recording_url?: string | null
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voicemails_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user" | "affiliate"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +456,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user", "affiliate"],
+    },
   },
 } as const

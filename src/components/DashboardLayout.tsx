@@ -1,182 +1,142 @@
 
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { 
-  Layout, 
-  LayoutContent, 
-  LayoutHeader,
-  LayoutSidebar 
-} from "@/components/ui/layout";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { 
-  BarChart3, 
-  Settings, 
-  Home, 
-  MessageSquare, 
-  HelpCircle, 
-  Bell, 
-  LogOut,
-  Link as LinkIcon
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { 
+  LayoutDashboard, 
+  Settings, 
+  Phone, 
+  BarChart2, 
+  HelpCircle, 
+  LogOut, 
+  Menu, 
+  X,
+  CreditCard
+} from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const { signOut } = useAuth();
   const location = useLocation();
-  const { role, setRole } = useAuth();
-  
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   const menuItems = [
-    { 
-      icon: <Home className="w-5 h-5" />, 
-      label: "Dashboard", 
-      path: "/dashboard" 
-    },
-    { 
-      icon: <MessageSquare className="w-5 h-5" />, 
-      label: "Receptionist Setup", 
-      path: "/dashboard/setup" 
-    },
-    { 
-      icon: <BarChart3 className="w-5 h-5" />, 
-      label: "Reports", 
-      path: "/dashboard/reports" 
-    },
-    { 
-      icon: <LinkIcon className="w-5 h-5" />, 
-      label: "Affiliate Program", 
-      path: "/dashboard/affiliate" 
-    },
-    { 
-      icon: <Settings className="w-5 h-5" />, 
-      label: "Account Settings", 
-      path: "/dashboard/settings" 
-    },
-    { 
-      icon: <HelpCircle className="w-5 h-5" />, 
-      label: "Help & Support", 
-      path: "/dashboard/help" 
-    },
+    { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <Phone size={18} />, label: "Receptionist Setup", path: "/dashboard/setup" },
+    { icon: <BarChart2 size={18} />, label: "Reports", path: "/dashboard/reports" },
+    { icon: <CreditCard size={18} />, label: "Billing", path: "/dashboard/billing" },
+    { icon: <Settings size={18} />, label: "Settings", path: "/dashboard/settings" },
+    { icon: <HelpCircle size={18} />, label: "Help & Support", path: "/dashboard/help" },
   ];
 
-  const handleSwitchToAdminView = () => {
-    setRole('admin');
-    window.location.href = "/admin";
-  };
-  
-  const handleSwitchToAffiliateView = () => {
-    setRole('affiliate');
-    window.location.href = "/affiliate";
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Layout>
-        <LayoutSidebar className="fixed top-0 left-0 h-screen w-64 bg-card shadow-md z-40">
-          <div className="py-6 px-4">
-            <Link to="/" className="flex items-center font-bold text-[20px] text-foreground mb-10">
-              <div className="w-[30px] h-[30px] bg-[#1A237E] rounded-full mr-3 relative">
-                <div className="absolute w-[15px] h-[12px] bg-white rounded-t-full top-2 left-[7px]" />
-              </div>
-              <span>AI Assistants</span>
-            </Link>
-            
-            <nav className="space-y-2">
-              {menuItems.map((item) => (
-                <Link 
-                  key={item.path} 
-                  to={item.path}
-                  className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.path
-                    ? "bg-[#F5F5F5] text-foreground"
-                    : "text-gray-700 hover:bg-[#F5F5F5] hover:text-foreground"
-                  }`}
-                >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.label}
-                </Link>
+    <div className="min-h-screen bg-gray-50">
+      {/* Top mobile navigation bar */}
+      <div className="lg:hidden bg-white shadow-sm py-4 px-6 flex justify-between items-center">
+        <div className="flex items-center">
+          <Link to="/" className="text-xl font-bold text-[#1A237E]">AI Receptionist</Link>
+        </div>
+        <button onClick={toggleMobileMenu} className="p-2">
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      <div className="flex">
+        {/* Sidebar - desktop view */}
+        <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200 h-screen fixed">
+          <div className="p-6">
+            <Link to="/" className="text-xl font-bold text-[#1A237E]">AI Receptionist</Link>
+          </div>
+          <nav className="flex-1 overflow-y-auto">
+            <ul className="px-4 py-2">
+              {menuItems.map((item, index) => (
+                <li key={index} className="mb-1">
+                  <Link
+                    to={item.path}
+                    className={`flex items-center px-4 py-3 text-sm rounded-lg ${
+                      location.pathname === item.path
+                        ? "bg-[#E3F2FD] text-[#1A237E] font-medium"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <span className="mr-3">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                </li>
               ))}
+              <li className="mb-1 mt-6">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 hover:bg-red-50"
+                >
+                  <LogOut size={18} className="mr-3" />
+                  Sign Out
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden fixed inset-0 z-50 bg-white">
+            <div className="flex justify-end p-4">
+              <button onClick={toggleMobileMenu} className="p-2">
+                <X size={24} />
+              </button>
+            </div>
+            <nav className="px-6 py-4">
+              <ul>
+                {menuItems.map((item, index) => (
+                  <li key={index} className="mb-3">
+                    <Link
+                      to={item.path}
+                      className={`flex items-center px-4 py-3 text-sm rounded-lg ${
+                        location.pathname === item.path
+                          ? "bg-[#E3F2FD] text-[#1A237E] font-medium"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                      onClick={toggleMobileMenu}
+                    >
+                      <span className="mr-3">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+                <li className="mb-3 mt-6">
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={18} className="mr-3" />
+                    Sign Out
+                  </button>
+                </li>
+              </ul>
             </nav>
           </div>
-          
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
-            <div className="flex items-center">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-gray-500 truncate">Premier Dental</p>
-              </div>
-              <Button variant="ghost" size="icon" className="ml-1">
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </LayoutSidebar>
-        
-        <div className="ml-64">
-          <LayoutHeader className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
-            <h1 className="text-xl font-semibold text-foreground">
-              {menuItems.find(item => item.path === location.pathname)?.label || "Dashboard"}
-            </h1>
-            
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-1 right-1.5 h-2 w-2 rounded-full bg-[#FF6F61]"></span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <div className="py-2 px-4">
-                    <p className="text-sm font-medium">Notifications</p>
-                  </div>
-                  <div className="py-2 px-4 text-sm text-gray-600">
-                    <p>No new notifications</p>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  className="text-sm"
-                  onClick={handleSwitchToAdminView}
-                >
-                  <span className="text-[#00B8D4] mr-1">+</span> Switch to Admin View
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="text-sm"
-                  onClick={handleSwitchToAffiliateView}
-                >
-                  <span className="text-[#FF6F61] mr-1">+</span> Switch to Affiliate View
-                </Button>
-              </div>
-            </div>
-          </LayoutHeader>
-          
-          <LayoutContent className="p-6">
+        )}
+
+        {/* Main content area */}
+        <main className="flex-1 lg:ml-64 p-6">
+          <div className="max-w-4xl mx-auto">
             {children}
-          </LayoutContent>
-        </div>
-      </Layout>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
