@@ -20,7 +20,7 @@ interface SubscriptionProviderProps {
 const SubscriptionContext = createContext<SubscriptionState | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
-  const { session } = useAuth();
+  const auth = useAuth();
   const { toast } = useToast();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [planType, setPlanType] = useState<string | null>(null);
@@ -29,7 +29,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkSubscription = async () => {
-    if (!session?.access_token) {
+    // Only check subscription if the user is authenticated
+    if (!auth.user?.id) {
       setIsSubscribed(false);
       setPlanType(null);
       setIsCanceled(false);
@@ -64,7 +65,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   useEffect(() => {
     checkSubscription();
-  }, [session]);
+  }, [auth.user]);
 
   const value = {
     isSubscribed,

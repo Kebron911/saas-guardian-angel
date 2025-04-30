@@ -6,6 +6,7 @@ import { LiveStatus } from "@/components/dashboard/LiveStatus";
 import { CallTrendChart } from "@/components/dashboard/CallTrendChart";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
+import { GenerateSampleData } from "@/components/dashboard/GenerateSampleData";
 
 const Dashboard = () => {
   return (
@@ -13,16 +14,19 @@ const Dashboard = () => {
       {/* Date filter */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">Overview</h2>
-        <div className="bg-white rounded-lg border border-gray-200 py-1 px-2 flex space-x-2">
-          <button className="px-3 py-1.5 rounded-md bg-[#1A237E] text-white text-sm font-medium">
-            This Month
-          </button>
-          <button className="px-3 py-1.5 rounded-md text-gray-600 text-sm font-medium hover:bg-gray-100">
-            This Week
-          </button>
-          <button className="px-3 py-1.5 rounded-md text-gray-600 text-sm font-medium hover:bg-gray-100">
-            Custom Range
-          </button>
+        <div className="flex gap-4">
+          <GenerateSampleData />
+          <div className="bg-white rounded-lg border border-gray-200 py-1 px-2 flex space-x-2">
+            <button className="px-3 py-1.5 rounded-md bg-[#1A237E] text-white text-sm font-medium">
+              This Month
+            </button>
+            <button className="px-3 py-1.5 rounded-md text-gray-600 text-sm font-medium hover:bg-gray-100">
+              This Week
+            </button>
+            <button className="px-3 py-1.5 rounded-md text-gray-600 text-sm font-medium hover:bg-gray-100">
+              Custom Range
+            </button>
+          </div>
         </div>
       </div>
 

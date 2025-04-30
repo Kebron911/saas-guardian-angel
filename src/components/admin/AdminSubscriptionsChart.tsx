@@ -1,20 +1,33 @@
 
 import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { useAdminDashboardData } from "@/hooks/useAdminDashboardData";
 
 export const AdminSubscriptionsChart = () => {
-  const data = [
-    { name: "Basic Plan", value: 1285, color: "#1A237E" },
-    { name: "Pro Plan", value: 896, color: "#00B8D4" },
-    { name: "Enterprise", value: 662, color: "#FF6F61" },
-  ];
+  const { subscriptionsData, isLoading, error } = useAdminDashboardData();
+
+  if (isLoading) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <div className="animate-pulse bg-gray-200 h-full w-full rounded"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <p className="text-red-500">Error loading subscription data: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={subscriptionsData}
             cx="50%"
             cy="50%"
             innerRadius={70}
@@ -24,7 +37,7 @@ export const AdminSubscriptionsChart = () => {
             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             labelLine={false}
           >
-            {data.map((entry, index) => (
+            {subscriptionsData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>

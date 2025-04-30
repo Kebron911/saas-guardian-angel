@@ -1,25 +1,32 @@
 
 import React from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useAdminDashboardData } from "@/hooks/useAdminDashboardData";
 
 export const AdminRevenueChart = () => {
-  const data = [
-    { name: "Jan", revenue: 12400 },
-    { name: "Feb", revenue: 15600 },
-    { name: "Mar", revenue: 18200 },
-    { name: "Apr", revenue: 21000 },
-    { name: "May", revenue: 25600 },
-    { name: "Jun", revenue: 32100 },
-    { name: "Jul", revenue: 36500 },
-    { name: "Aug", revenue: 42800 },
-    { name: "Sep", revenue: 48295 },
-  ];
+  const { revenueData, isLoading, error } = useAdminDashboardData();
+
+  if (isLoading) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <div className="animate-pulse bg-gray-200 h-full w-full rounded"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <p className="text-red-500">Error loading revenue data: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
-          data={data}
+          data={revenueData}
           margin={{
             top: 5,
             right: 20,
