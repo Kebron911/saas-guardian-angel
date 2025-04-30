@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import AccountSettings from "@/pages/AccountSettings";
 import HelpSupport from "@/pages/HelpSupport";
 import BillingPage from "@/pages/BillingPage";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import OrderForm from "@/pages/OrderForm";
 
 // Admin Routes
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
@@ -48,6 +48,7 @@ const App = () => (
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/" element={<Index />} />
+                <Route path="/order" element={<OrderForm />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                 
                 {/* User Dashboard Routes */}

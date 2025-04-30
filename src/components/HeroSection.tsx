@@ -15,7 +15,7 @@ const HeroSection = () => (
         The all-in-one AI-first SaaS starter kit. Focus on your product, not the boilerplate.
       </p>
       <Button size="lg" className="bg-purple-600 hover:bg-purple-700" asChild>
-        <a href="#get-started" id="get-started">Get Started for Free</a>
+        <a href="/order" id="get-started">Get Started for Free</a>
       </Button>
     </div>
   </section>

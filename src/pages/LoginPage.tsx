@@ -9,10 +9,12 @@ import { Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { setRole } = useAuth();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -21,16 +23,45 @@ const LoginPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Set the role in our auth context
-    setRole(selectedRole);
-    
-    // Navigate to the appropriate dashboard
-    if (selectedRole === "admin") {
-      navigate("/admin");
-    } else if (selectedRole === "affiliate") {
-      navigate("/affiliate");
+    // Validate email format
+    const predefinedUsers = {
+      "user@example.com": { role: "user", route: "/dashboard" },
+      "admin@example.com": { role: "admin", route: "/admin" },
+      "affiliate@example.com": { role: "affiliate", route: "/affiliate" },
+    };
+
+    // Check if the email matches one of our predefined users
+    if (Object.keys(predefinedUsers).includes(email)) {
+      // Set the role based on the email
+      const userRole = predefinedUsers[email as keyof typeof predefinedUsers].role as "user" | "admin" | "affiliate";
+      const userRoute = predefinedUsers[email as keyof typeof predefinedUsers].route;
+      
+      setRole(userRole);
+      
+      toast({
+        title: "Login successful",
+        description: `Logged in as ${userRole}`,
+      });
+      
+      // Navigate to the appropriate dashboard
+      navigate(userRoute);
     } else {
-      navigate("/dashboard");
+      // Check if using the selected role instead
+      setRole(selectedRole);
+      
+      toast({
+        title: "Login successful",
+        description: `Logged in as ${selectedRole} using custom credentials`,
+      });
+      
+      // Navigate based on the selected role
+      if (selectedRole === "admin") {
+        navigate("/admin");
+      } else if (selectedRole === "affiliate") {
+        navigate("/affiliate");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 
@@ -70,6 +101,9 @@ const LoginPage = () => {
                   className="block w-full"
                 />
               </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Try: user@example.com, admin@example.com, or affiliate@example.com
+              </div>
             </div>
 
             <div>
@@ -97,11 +131,14 @@ const LoginPage = () => {
                   )}
                 </button>
               </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Any password will work for demonstration purposes
+              </div>
             </div>
 
             {/* Role selection for testing */}
             <div className="border-t border-gray-200 pt-4">
-              <Label className="mb-3 block">Login as:</Label>
+              <Label className="mb-3 block">Or login as (custom credentials):</Label>
               <RadioGroup 
                 value={selectedRole} 
                 onValueChange={(val: "user" | "admin" | "affiliate") => setSelectedRole(val)}
