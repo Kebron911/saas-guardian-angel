@@ -76,76 +76,78 @@ const OrderForm = () => {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Pricing Cards */}
-          <Card className={`border-2 ${plan === "starter" ? "border-[#00B8D4]" : "border-border"} h-full`}>
-            <CardHeader>
-              <CardTitle>Starter</CardTitle>
-              <CardDescription>Perfect for small businesses</CardDescription>
-              <div className="mt-4 text-3xl font-bold">$299<span className="text-lg font-normal">/month</span></div>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> 24/7 AI Receptionist</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Up to 500 minutes/month</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Basic call analytics</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Email notifications</li>
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <div className="flex items-center">
-                <RadioGroupItem id="starter" value="starter" checked={plan === "starter"} onClick={() => setPlan("starter")} className="mr-2" />
-                <Label htmlFor="starter">Select Starter</Label>
-              </div>
-            </CardFooter>
-          </Card>
+          {/* Pricing Cards with RadioGroup Wrapper */}
+          <RadioGroup value={plan} onValueChange={setPlan} className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:col-span-3">
+            <Card className={`border-2 ${plan === "starter" ? "border-[#00B8D4]" : "border-border"} h-full`}>
+              <CardHeader>
+                <CardTitle>Starter</CardTitle>
+                <CardDescription>Perfect for small businesses</CardDescription>
+                <div className="mt-4 text-3xl font-bold">$299<span className="text-lg font-normal">/month</span></div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> 24/7 AI Receptionist</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Up to 500 minutes/month</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Basic call analytics</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Email notifications</li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <div className="flex items-center">
+                  <RadioGroupItem id="starter" value="starter" className="mr-2" />
+                  <Label htmlFor="starter">Select Starter</Label>
+                </div>
+              </CardFooter>
+            </Card>
 
-          <Card className={`border-2 ${plan === "professional" ? "border-[#00B8D4]" : "border-border"} h-full`}>
-            <CardHeader>
-              <div className="px-3 py-1 text-xs bg-[#00B8D4] text-white rounded-full mb-2 inline-block">POPULAR</div>
-              <CardTitle>Professional</CardTitle>
-              <CardDescription>For growing businesses</CardDescription>
-              <div className="mt-4 text-3xl font-bold">$599<span className="text-lg font-normal">/month</span></div>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Everything in Starter</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Up to 1500 minutes/month</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Advanced call routing</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> SMS notifications</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Custom voice selection</li>
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <div className="flex items-center">
-                <RadioGroupItem id="professional" value="professional" checked={plan === "professional"} onClick={() => setPlan("professional")} className="mr-2" />
-                <Label htmlFor="professional">Select Professional</Label>
-              </div>
-            </CardFooter>
-          </Card>
+            <Card className={`border-2 ${plan === "professional" ? "border-[#00B8D4]" : "border-border"} h-full`}>
+              <CardHeader>
+                <div className="px-3 py-1 text-xs bg-[#00B8D4] text-white rounded-full mb-2 inline-block">POPULAR</div>
+                <CardTitle>Professional</CardTitle>
+                <CardDescription>For growing businesses</CardDescription>
+                <div className="mt-4 text-3xl font-bold">$599<span className="text-lg font-normal">/month</span></div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Everything in Starter</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Up to 1500 minutes/month</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Advanced call routing</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> SMS notifications</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Custom voice selection</li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <div className="flex items-center">
+                  <RadioGroupItem id="professional" value="professional" className="mr-2" />
+                  <Label htmlFor="professional">Select Professional</Label>
+                </div>
+              </CardFooter>
+            </Card>
 
-          <Card className={`border-2 ${plan === "enterprise" ? "border-[#00B8D4]" : "border-border"} h-full`}>
-            <CardHeader>
-              <CardTitle>Enterprise</CardTitle>
-              <CardDescription>For organizations with complex needs</CardDescription>
-              <div className="mt-4 text-3xl font-bold">$1,299<span className="text-lg font-normal">/month</span></div>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Everything in Professional</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Unlimited minutes</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Premium voice options</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> API integration</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Custom script development</li>
-                <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Dedicated support</li>
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <div className="flex items-center">
-                <RadioGroupItem id="enterprise" value="enterprise" checked={plan === "enterprise"} onClick={() => setPlan("enterprise")} className="mr-2" />
-                <Label htmlFor="enterprise">Select Enterprise</Label>
-              </div>
-            </CardFooter>
-          </Card>
+            <Card className={`border-2 ${plan === "enterprise" ? "border-[#00B8D4]" : "border-border"} h-full`}>
+              <CardHeader>
+                <CardTitle>Enterprise</CardTitle>
+                <CardDescription>For organizations with complex needs</CardDescription>
+                <div className="mt-4 text-3xl font-bold">$1,299<span className="text-lg font-normal">/month</span></div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Everything in Professional</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Unlimited minutes</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Premium voice options</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> API integration</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Custom script development</li>
+                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Dedicated support</li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <div className="flex items-center">
+                  <RadioGroupItem id="enterprise" value="enterprise" className="mr-2" />
+                  <Label htmlFor="enterprise">Select Enterprise</Label>
+                </div>
+              </CardFooter>
+            </Card>
+          </RadioGroup>
         </div>
 
         {/* Order Form */}
