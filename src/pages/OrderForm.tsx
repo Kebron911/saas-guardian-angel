@@ -92,8 +92,10 @@ const OrderForm = () => {
               </ul>
             </CardContent>
             <CardFooter>
-              <RadioGroupItem id="starter" value="starter" checked={plan === "starter"} onClick={() => setPlan("starter")} className="mr-2" />
-              <Label htmlFor="starter">Select Starter</Label>
+              <div className="flex items-center">
+                <RadioGroupItem id="starter" value="starter" checked={plan === "starter"} onClick={() => setPlan("starter")} className="mr-2" />
+                <Label htmlFor="starter">Select Starter</Label>
+              </div>
             </CardFooter>
           </Card>
 
@@ -114,8 +116,10 @@ const OrderForm = () => {
               </ul>
             </CardContent>
             <CardFooter>
-              <RadioGroupItem id="professional" value="professional" checked={plan === "professional"} onClick={() => setPlan("professional")} className="mr-2" />
-              <Label htmlFor="professional">Select Professional</Label>
+              <div className="flex items-center">
+                <RadioGroupItem id="professional" value="professional" checked={plan === "professional"} onClick={() => setPlan("professional")} className="mr-2" />
+                <Label htmlFor="professional">Select Professional</Label>
+              </div>
             </CardFooter>
           </Card>
 
@@ -136,8 +140,10 @@ const OrderForm = () => {
               </ul>
             </CardContent>
             <CardFooter>
-              <RadioGroupItem id="enterprise" value="enterprise" checked={plan === "enterprise"} onClick={() => setPlan("enterprise")} className="mr-2" />
-              <Label htmlFor="enterprise">Select Enterprise</Label>
+              <div className="flex items-center">
+                <RadioGroupItem id="enterprise" value="enterprise" checked={plan === "enterprise"} onClick={() => setPlan("enterprise")} className="mr-2" />
+                <Label htmlFor="enterprise">Select Enterprise</Label>
+              </div>
             </CardFooter>
           </Card>
         </div>

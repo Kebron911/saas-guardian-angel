@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import HomeHeroSection from "@/components/HomeHeroSection";
@@ -41,7 +42,7 @@ const HomePage = () => {
                 Log In
               </Link>
               <Link 
-                to="/login" 
+                to="/order" 
                 className="bg-[#00B8D4] text-white px-6 py-3 rounded font-bold hover:bg-[#009cb8] transition"
               >
                 Get Started
@@ -54,19 +55,16 @@ const HomePage = () => {
       <main className="pt-[140px]">
         <HomeHeroSection />
         
-        {/* Features Section with enhanced visuals */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-b from-[#E3F2FD]/50 to-transparent pointer-events-none" />
           <HomeFeaturesSection />
         </div>
 
-        {/* Benefits Section with subtle animation */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-[#F8F9FA] to-white pointer-events-none" />
           <HomeBenefitsSection />
         </div>
 
-        {/* How It Works Section with enhanced visuals */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-t from-[#E3F2FD]/30 to-transparent pointer-events-none" />
           <HomeHowItWorksSection />
@@ -75,7 +73,6 @@ const HomePage = () => {
         <HomeUseCasesSection />
         <HomeFAQSection />
 
-        {/* Blog Section with subtle animation */}
         <section id="blog" className="py-20 bg-gradient-to-b from-gray-50 to-white">
           <div className="container max-w-[1200px] mx-auto px-5">
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1A237E] mb-12 hover:scale-105 transition-transform duration-300">
@@ -86,21 +83,19 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* CTA Section with enhanced visuals */}
-        <section className="cta-section bg-gradient-to-br from-[#1A237E] to-[#141c64] text-white py-20 text-center relative overflow-hidden">
+        <section className="cta-section bg-gradient-to-br from-[#1A237E] to-[#141c64] py-20 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOGM5Ljk0MSAwIDE4LTguMDU5IDE4LTE4cy04LjA1OS0xOC0xOC0xOHptMCAyNmMtNC40MTEgMC04LTMuNTg5LTgtOHMzLjU4OS04IDgtOCA4IDMuNTg5IDggOC0zLjU4OSA4LTggOHoiIG9wYWNpdHk9Ii4xIiBmaWxsPSIjZmZmIi8+PC9nPjwvc3ZnPg==')] opacity-10" />
           <div className="container max-w-[1200px] mx-auto px-5 relative">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1A237E] mb-5">Start Your AI Receptionist Trial Today</h2>
-            <p className="text-lg max-w-2xl mx-auto mb-8">Join thousands of businesses already saving time and money while providing better customer service. Try it risk-free with our 14-day money-back guarantee.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-5">Start Your AI Receptionist Trial Today</h2>
+            <p className="text-lg max-w-2xl mx-auto mb-8 text-white/90">Join thousands of businesses already saving time and money while providing better customer service. Try it risk-free with our 14-day money-back guarantee.</p>
             <div className="flex flex-wrap justify-center gap-5">
-              <a href="#" className="bg-[#00B8D4] text-white px-6 py-3 rounded font-bold text-lg hover:bg-[#009cb8] transition">Start Your Free Trial</a>
+              <Link to="/order" className="bg-[#00B8D4] text-white px-6 py-3 rounded font-bold text-lg hover:bg-[#009cb8] transition">Start Your Free Trial</Link>
               <a href="#" className="border-2 border-white text-white px-6 py-3 rounded font-bold text-lg hover:bg-white hover:text-[#1A237E] transition">Live Demo</a>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer with subtle animation */}
       <footer className="bg-[#333] text-white py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOGM5Ljk0MSAwIDE4LTguMDU5IDE4LTE4cy04LjA1OS0xOC0xOC0xOHptMCAyNmMtNC40MTEgMC04LTMuNTg5LTgtOHMzLjU4OS04IDgtOCA4IDMuNTg5IDggOC0zLjU4OSA4LTggOHoiIG9wYWNpdHk9Ii4xIiBmaWxsPSIjZmZmIi8+PC9nPjwvc3ZnPg==')] opacity-5" />
         <div className="container max-w-[1200px] mx-auto px-5 relative">

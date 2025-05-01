@@ -196,7 +196,7 @@ const LoginPage = () => {
                 <span className="px-2 text-muted-foreground">
                   Don't have an account?{" "}
                   <a
-                    href="#"
+                    href="/order"
                     className="font-medium text-[#00B8D4] hover:text-[#0097A7] dark:text-[#4DD0E1] dark:hover:text-[#80DEEA]"
                   >
                     Join Now
