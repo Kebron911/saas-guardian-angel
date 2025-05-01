@@ -17,7 +17,8 @@ import {
   Bell,
   LogOut,
   CreditCard,
-  Link as LinkIcon
+  Link as LinkIcon,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,6 +58,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <LinkIcon className="w-5 h-5" />, 
       label: "Referrals", 
       path: "/admin/referrals" 
+    },
+    { 
+      icon: <FileText className="w-5 h-5" />, 
+      label: "Blog", 
+      path: "/admin/blog" 
     },
     { 
       icon: <HelpCircle className="w-5 h-5" />, 

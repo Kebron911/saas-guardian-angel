@@ -27,6 +27,7 @@ import AdminFinancePage from "@/pages/admin/AdminFinancePage";
 import AdminReferralsPage from "@/pages/admin/AdminReferralsPage";
 import AdminSupportPage from "@/pages/admin/AdminSupportPage";
 import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
+import AdminBlogPage from "@/pages/admin/AdminBlogPage";
 
 // Affiliate Routes
 import AffiliatePerformancePage from "@/pages/affiliate/AffiliatePerformancePage";
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="/admin/referrals" element={<AdminReferralsPage />} />
                 <Route path="/admin/support" element={<AdminSupportPage />} />
                 <Route path="/admin/settings" element={<AdminSettingsPage />} />
+                <Route path="/admin/blog" element={<AdminBlogPage />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
