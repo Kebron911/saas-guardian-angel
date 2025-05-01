@@ -1,87 +1,38 @@
-import React from "react";
 
-const BlogSidebar = () => (
-  <aside className="sidebar mt-16 md:mt-0">
-    {/* Search Widget */}
-    <div className="sidebar-widget bg-[#F5F5F5] rounded-lg p-6 mb-7">
-      <h3 className="font-bold text-lg text-[#1A237E] mb-5">Search</h3>
-      <form className="search-form flex">
-        <input type="text" className="search-input flex-1 border border-gray-300 rounded-l px-4 py-2 text-base" placeholder="Search articles..." />
-        <button type="submit" className="search-button bg-[#1A237E] text-white px-5 rounded-r">🔍</button>
-      </form>
-    </div>
-    {/* Categories Widget */}
-    <div className="sidebar-widget bg-[#F5F5F5] rounded-lg p-6 mb-7">
-      <h3 className="font-bold text-lg text-[#1A237E] mb-5">Categories</h3>
-      <ul className="categories-list">
-        <li className="py-2 border-b border-gray-200 flex justify-between">
-          <a href="#" className="text-[#555] hover:text-[#00B8D4] flex-1">Case Studies</a>
-          <span className="count bg-[#00B8D4] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ml-2">12</span>
-        </li>
-        <li className="py-2 border-b border-gray-200 flex justify-between">
-          <a href="#" className="text-[#555] hover:text-[#00B8D4] flex-1">Strategy</a>
-          <span className="count bg-[#00B8D4] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ml-2">8</span>
-        </li>
-        <li className="py-2 border-b border-gray-200 flex justify-between">
-          <a href="#" className="text-[#555] hover:text-[#00B8D4] flex-1">Trends</a>
-          <span className="count bg-[#00B8D4] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ml-2">5</span>
-        </li>
-        <li className="py-2 border-b border-gray-200 flex justify-between">
-          <a href="#" className="text-[#555] hover:text-[#00B8D4] flex-1">Productivity</a>
-          <span className="count bg-[#00B8D4] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ml-2">3</span>
-        </li>
-        <li className="py-2 border-b border-gray-200 flex justify-between">
-          <a href="#" className="text-[#555] hover:text-[#00B8D4] flex-1">Customer Service</a>
-          <span className="count bg-[#00B8D4] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ml-2">15</span>
-        </li>
-      </ul>
-    </div>
-    {/* Popular Posts Widget */}
-    <div className="sidebar-widget bg-[#F5F5F5] rounded-lg p-6 mb-7">
-      <h3 className="font-bold text-lg text-[#1A237E] mb-5">Popular Posts</h3>
-      <ul className="popular-posts">
-        <li className="popular-post-item flex items-center py-3 border-b border-gray-200">
-          <div className="popular-post-image w-[60px] h-[60px] rounded bg-gray-200 flex-shrink-0 mr-4">
-            <img src="/api/placeholder/60/60" alt="Popular Post" className="rounded"/>
-          </div>
-          <div>
-            <h4 className="font-bold text-base"><a href="#" className="hover:text-[#00B8D4]">AI Assistants vs. Outsourcing: Which is Right for You?</a></h4>
-            <span className="popular-post-date text-xs text-[#777]">March 15, 2025</span>
-          </div>
-        </li>
-        <li className="popular-post-item flex items-center py-3 border-b border-gray-200">
-          <div className="popular-post-image w-[60px] h-[60px] rounded bg-gray-200 flex-shrink-0 mr-4">
-            <img src="/api/placeholder/60/60" alt="Popular Post" className="rounded"/>
-          </div>
-          <div>
-            <h4 className="font-bold text-base"><a href="#" className="hover:text-[#00B8D4]">The Future of Work: How AI is Reshaping the Modern Workplace</a></h4>
-            <span className="popular-post-date text-xs text-[#777]">February 28, 2025</span>
-          </div>
-        </li>
-        <li className="popular-post-item flex items-center py-3 border-b border-gray-200">
-          <div className="popular-post-image w-[60px] h-[60px] rounded bg-gray-200 flex-shrink-0 mr-4">
-            <img src="/api/placeholder/60/60" alt="Popular Post" className="rounded"/>
-          </div>
-          <div>
-            <h4 className="font-bold text-base"><a href="#" className="hover:text-[#00B8D4]">Top 10 AI Assistant Tools for Boosting Productivity in 2025</a></h4>
-            <span className="popular-post-date text-xs text-[#777]">January 22, 2025</span>
-          </div>
-        </li>
-      </ul>
-    </div>
-    {/* Tags Widget */}
-    <div className="sidebar-widget bg-[#F5F5F5] rounded-lg p-6">
-      <h3 className="font-bold text-lg text-[#1A237E] mb-5">Tags</h3>
-      <div className="tag-cloud flex flex-wrap gap-3">
-        <a href="#" className="tag bg-white text-[#555] px-4 py-1 rounded hover:bg-[#00B8D4] hover:text-white">AI Staff</a>
-        <a href="#" className="tag bg-white text-[#555] px-4 py-1 rounded hover:bg-[#00B8D4] hover:text-white">Automation</a>
-        <a href="#" className="tag bg-white text-[#555] px-4 py-1 rounded hover:bg-[#00B8D4] hover:text-white">Productivity</a>
-        <a href="#" className="tag bg-white text-[#555] px-4 py-1 rounded hover:bg-[#00B8D4] hover:text-white">Customer Service</a>
-        <a href="#" className="tag bg-white text-[#555] px-4 py-1 rounded hover:bg-[#00B8D4] hover:text-white">Efficiency</a>
-        <a href="#" className="tag bg-white text-[#555] px-4 py-1 rounded hover:bg-[#00B8D4] hover:text-white">Trends</a>
+import React from "react";
+import { Link } from "react-router-dom";
+import BlogCategoriesList from "./BlogCategoriesList";
+
+const BlogSidebar = () => {
+  return (
+    <aside className="space-y-8">
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4">About Our Blog</h3>
+        <p className="text-gray-600">
+          Welcome to our blog where we share insights about AI receptionists, 
+          customer service automation, and tips for small business growth.
+        </p>
       </div>
-    </div>
-  </aside>
-);
+      
+      <BlogCategoriesList />
+      
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4">Recent Posts</h3>
+        <div className="space-y-4">
+          {/* This is a simplified example - in a real application you'd fetch recent posts */}
+          <Link to="/blog/sample-post-1" className="block hover:text-[#9b87f5]">
+            How AI is Transforming Customer Service
+          </Link>
+          <Link to="/blog/sample-post-2" className="block hover:text-[#9b87f5]">
+            5 Ways to Improve Your Business Communication
+          </Link>
+          <Link to="/blog/sample-post-3" className="block hover:text-[#9b87f5]">
+            The Benefits of an AI Receptionist
+          </Link>
+        </div>
+      </div>
+    </aside>
+  );
+};
 
 export default BlogSidebar;

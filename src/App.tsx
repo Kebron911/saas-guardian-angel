@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BlogPostPage from "@/pages/BlogPostPage";
+import BlogCategoriesPage from "@/pages/BlogCategoriesPage";
 import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ReceptionistSetup from "@/pages/ReceptionistSetup";
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/order" element={<OrderForm />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/blog/category/:slug" element={<BlogCategoriesPage />} />
                 
                 {/* User Dashboard Routes */}
                 <Route path="/dashboard" element={<Dashboard />} />
