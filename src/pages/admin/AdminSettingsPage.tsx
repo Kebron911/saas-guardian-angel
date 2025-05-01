@@ -1,4 +1,3 @@
-
 import React from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -206,112 +205,6 @@ const InvoiceSettingsTab = () => {
   );
 };
 
-const ReferralSettingsTab = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Referral Program Settings</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="tier1-commission" className="text-sm font-medium">Tier 1 Commission (%)</label>
-              <div className="relative">
-                <Input id="tier1-commission" type="number" className="pr-8" defaultValue="20" min="0" max="100" />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-              </div>
-              <p className="text-xs text-gray-500">Commission for direct referrals</p>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="tier2-commission" className="text-sm font-medium">Tier 2 Commission (%)</label>
-              <div className="relative">
-                <Input id="tier2-commission" type="number" className="pr-8" defaultValue="10" min="0" max="100" />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-              </div>
-              <p className="text-xs text-gray-500">Commission for second-level referrals</p>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="cookie-duration" className="text-sm font-medium">Cookie Duration (Days)</label>
-              <Input id="cookie-duration" type="number" defaultValue="30" min="1" />
-              <p className="text-xs text-gray-500">How long referral tracking cookies remain active</p>
-            </div>
-            
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="auto-approve" className="h-4 w-4 rounded border-gray-300" defaultChecked />
-                <label htmlFor="auto-approve" className="text-sm font-medium">Auto-approve affiliates</label>
-              </div>
-              <p className="text-xs text-gray-500">Automatically approve new affiliate applications</p>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="payout-frequency" className="text-sm font-medium">Payout Frequency</label>
-              <Select defaultValue="monthly">
-                <SelectTrigger id="payout-frequency">
-                  <SelectValue placeholder="Select Frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="attribution-method" className="text-sm font-medium">Attribution Method</label>
-              <Select defaultValue="first_click">
-                <SelectTrigger id="attribution-method">
-                  <SelectValue placeholder="Select Method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="first_click">First Click</SelectItem>
-                  <SelectItem value="last_click">Last Click</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">Determines which affiliate gets credit for the referral</p>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="preferred-payout" className="text-sm font-medium">Preferred Payout Method</label>
-              <Select defaultValue="paypal">
-                <SelectTrigger id="preferred-payout">
-                  <SelectValue placeholder="Select Method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paypal">PayPal</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="stripe">Stripe</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="payout-notes" className="text-sm font-medium">Manual Payout Notes</label>
-              <textarea 
-                id="payout-notes" 
-                rows={3} 
-                className="w-full min-h-[80px] p-2 border border-gray-300 rounded-md"
-                defaultValue="For manual payouts, please ensure all affiliate information is complete and verified."
-              ></textarea>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-6 flex justify-end">
-          <Button>Save Settings</Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
 const SystemSettingsTab = () => {
   return (
     <Card>
@@ -460,7 +353,6 @@ const AdminSettingsPage = () => {
         <TabsList className="mb-4 flex flex-wrap">
           <TabsTrigger value="global">Global</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
-          <TabsTrigger value="referral">Referral</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
         </TabsList>
@@ -469,9 +361,6 @@ const AdminSettingsPage = () => {
         </TabsContent>
         <TabsContent value="invoice">
           <InvoiceSettingsTab />
-        </TabsContent>
-        <TabsContent value="referral">
-          <ReferralSettingsTab />
         </TabsContent>
         <TabsContent value="system">
           <SystemSettingsTab />
