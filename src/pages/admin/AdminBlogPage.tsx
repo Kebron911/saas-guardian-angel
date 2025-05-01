@@ -9,7 +9,6 @@ import BlogCategoriesList from "@/components/admin/blog/BlogCategoriesList";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminBlogPage = () => {
   const [selectedTab, setSelectedTab] = useState("posts");
@@ -52,7 +51,7 @@ const AdminBlogPage = () => {
 
       <Card>
         <CardHeader className="pb-2">
-          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <Tabs defaultValue={selectedTab} value={selectedTab} onValueChange={setSelectedTab} className="w-full">
             <TabsList>
               <TabsTrigger value="posts">Blog Posts</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -62,24 +61,25 @@ const AdminBlogPage = () => {
                 </TabsTrigger>
               )}
             </TabsList>
+          
+            <CardContent className="pt-4">
+              <TabsContent value="posts" className="mt-0">
+                <BlogPostList onEditPost={handleEditPost} />
+              </TabsContent>
+              <TabsContent value="categories" className="mt-0">
+                <BlogCategoriesList />
+              </TabsContent>
+              <TabsContent value="editor" className="mt-0">
+                <BlogPostEditor 
+                  postId={selectedPostId} 
+                  isNew={isNewPost} 
+                  onSaved={handlePostSaved} 
+                  onCancel={handlePostCancel}
+                />
+              </TabsContent>
+            </CardContent>
           </Tabs>
         </CardHeader>
-        <CardContent>
-          <TabsContent value="posts" className="mt-0">
-            <BlogPostList onEditPost={handleEditPost} />
-          </TabsContent>
-          <TabsContent value="categories" className="mt-0">
-            <BlogCategoriesList />
-          </TabsContent>
-          <TabsContent value="editor" className="mt-0">
-            <BlogPostEditor 
-              postId={selectedPostId} 
-              isNew={isNewPost} 
-              onSaved={handlePostSaved} 
-              onCancel={handlePostCancel}
-            />
-          </TabsContent>
-        </CardContent>
       </Card>
     </AdminLayout>
   );
