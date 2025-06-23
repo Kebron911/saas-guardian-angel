@@ -3,15 +3,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
-  BarChart3,
   DollarSign,
   Users,
   Tag,
   Search,
-  Filter,
-  ChevronDown,
   Plus,
-  Star,
   Edit,
   Trash2
 } from "lucide-react";
@@ -35,7 +31,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useAdminFinanceData, PromoCodeCreate } from "@/hooks/useAdminFinanceData";
+import { useFinanceDashboard } from "@/hooks/useFinanceDashboard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { RevenueTimelineChart } from "@/components/admin/finance/RevenueTimelineChart";
+import { RevenuePlanChart } from "@/components/admin/finance/RevenuePlanChart";
 
 // Sample data for dashboard stats
 const financeStats = {
@@ -162,89 +161,76 @@ const PromoCodeDialog = ({ onCreatePromoCode }: { onCreatePromoCode: (data: Prom
   );
 };
 
-const FinanceDashboardTab = () => (
-  <div>
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Monthly Revenue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center">
-            <DollarSign className="w-8 h-8 mr-3 text-green-600" />
-            <div className="text-3xl font-bold">${financeStats.monthlyRevenue.toLocaleString()}</div>
-          </div>
-          <div className="mt-2 text-sm text-green-600">+8% from last month</div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Active Subscriptions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center">
-            <Users className="w-8 h-8 mr-3 text-blue-600" />
-            <div className="text-3xl font-bold">{financeStats.activeSubscriptions.toLocaleString()}</div>
-          </div>
-          <div className="mt-2 text-sm text-blue-600">+12 new today</div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Promo Usage</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center">
-            <Tag className="w-8 h-8 mr-3 text-purple-600" />
-            <div className="text-3xl font-bold">{financeStats.promoUsage.toLocaleString()}</div>
-          </div>
-          <div className="mt-2 text-sm text-gray-500">This month</div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Total Payouts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center">
-            <DollarSign className="w-8 h-8 mr-3 text-amber-600" />
-            <div className="text-3xl font-bold">${financeStats.totalPayouts.toLocaleString()}</div>
-          </div>
-          <div className="mt-2 text-sm text-gray-500">Affiliate commissions</div>
-        </CardContent>
-      </Card>
-    </div>
+const FinanceDashboardTab = () => {
+  const { stats, revenueTimeline, revenuePlanData, isLoading } = useFinanceDashboard();
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue Timeline</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            <BarChart3 className="mx-auto h-16 w-16 opacity-50" />
-            <p className="mt-2">Revenue trends chart will appear here</p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue by Plan</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            <BarChart3 className="mx-auto h-16 w-16 opacity-50" />
-            <p className="mt-2">Plan distribution chart will appear here</p>
-          </div>
-        </CardContent>
-      </Card>
+  if (isLoading) {
+    return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Monthly Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <DollarSign className="w-8 h-8 mr-3 text-green-600" />
+              <div className="text-3xl font-bold">${stats.monthlyRevenue.toLocaleString()}</div>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">This month</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Active Subscriptions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <Users className="w-8 h-8 mr-3 text-blue-600" />
+              <div className="text-3xl font-bold">{stats.activeSubscriptions.toLocaleString()}</div>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">Currently active</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Promo Usage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <Tag className="w-8 h-8 mr-3 text-purple-600" />
+              <div className="text-3xl font-bold">{stats.promoUsage.toLocaleString()}</div>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">This month</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Total Payouts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <DollarSign className="w-8 h-8 mr-3 text-amber-600" />
+              <div className="text-3xl font-bold">${stats.totalPayouts.toLocaleString()}</div>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">Affiliate commissions</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RevenueTimelineChart data={revenueTimeline} isLoading={isLoading} />
+        <RevenuePlanChart data={revenuePlanData} isLoading={isLoading} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const TransactionsTab = () => {
   const { transactions, fetchTransactions, isLoading } = useAdminFinanceData();
