@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -5,6 +6,7 @@ import logging
 # Import routers
 from postgreSQL.admin.finance import router as admin_finance_router
 from postgreSQL.admin.finance_dashboard import router as admin_finance_dashboard_router
+from postgreSQL.admin.dashboard import router as admin_dashboard_router
 from postgreSQL.blog import router as blog_router
 from postgreSQL.metrics import router as metrics_router
 
@@ -26,6 +28,7 @@ app.add_middleware(
 # Include routers
 app.include_router(admin_finance_router, prefix="/admin", tags=["admin-finance"])
 app.include_router(admin_finance_dashboard_router, prefix="/admin/finance", tags=["admin-finance-dashboard"])
+app.include_router(admin_dashboard_router, prefix="/admin", tags=["admin-dashboard"])
 app.include_router(blog_router, prefix="/blog", tags=["blog"])
 app.include_router(metrics_router, prefix="/analytics", tags=["analytics"])
 
