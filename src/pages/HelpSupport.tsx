@@ -1,246 +1,147 @@
 
-import React, { useState } from "react";
-import { 
-  AlertCircle,
-  BookOpen, 
-  FileQuestion, 
-  HelpCircle, 
-  Mail, 
-  MessageSquare, 
-  Phone, 
-  PlayCircle, 
-  PlusCircle, 
-  Video,
-  Send
-} from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Search,
+  LifeBuoy,
+  MessageSquare,
+  FileText,
+  Mail,
+  Phone,
+  BookOpen,
+  Video,
+  Users
+} from "lucide-react";
 
 const HelpSupport = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
-  const [priority, setPriority] = useState("medium");
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, this would send the support ticket to the backend
-    toast.success("Your support ticket has been submitted successfully!");
-    // Reset form
-    setName("");
-    setEmail("");
-    setSubject("");
-    setMessage("");
-    setPriority("medium");
-  };
+  const navigate = useNavigate();
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Help & Support</CardTitle>
-            <CardDescription>
-              Find answers to common questions and get support.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="faq">
-                <AccordionTrigger className="flex items-center text-left">
-                  <div className="flex items-center space-x-3">
-                    <HelpCircle className="w-5 h-5 text-gray-500" />
-                    <span>Frequently Asked Questions</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4">
-                  <p>
-                    Here you can find answers to common questions about our
-                    services.
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="docs">
-                <AccordionTrigger className="flex items-center text-left">
-                  <div className="flex items-center space-x-3">
-                    <BookOpen className="w-5 h-5 text-gray-500" />
-                    <span>Documentation</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4">
-                  <p>
-                    Explore our detailed documentation to understand how to use
-                    our platform effectively.
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="videos">
-                <AccordionTrigger className="flex items-center text-left">
-                  <div className="flex items-center space-x-3">
-                    <Video className="w-5 h-5 text-gray-500" />
-                    <span>Video Tutorials</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4">
-                  <p>
-                    Watch our video tutorials for step-by-step guidance on using
-                    our services.
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="troubleshooting">
-                <AccordionTrigger className="flex items-center text-left">
-                  <div className="flex items-center space-x-3">
-                    <FileQuestion className="w-5 h-5 text-gray-500" />
-                    <span>Troubleshooting</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4">
-                  <p>
-                    Find solutions to common issues and learn how to troubleshoot
-                    problems.
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
+    
+
+      <div className="max-w-4xl mx-auto mb-12">
+        <div className="relative mb-10">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            placeholder="Search for help articles, tutorials, and more..."
+            className="pl-10 py-6 text-lg"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <FileText className="mr-2 h-5 w-5" /> Documentation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Browse our comprehensive documentation for guides, reference materials, and more.
+              </p>
+              <Button variant="outline" className="w-full">View Documentation</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Video className="mr-2 h-5 w-5" /> Video Tutorials
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Watch step-by-step tutorials to learn how to set up and use our service.
+              </p>
+              <Button variant="outline" className="w-full">Watch Tutorials</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <BookOpen className="mr-2 h-5 w-5" /> Knowledge Base
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Find answers to common questions in our searchable knowledge base.
+              </p>
+              <Button variant="outline" className="w-full">Explore Articles</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Users className="mr-2 h-5 w-5" /> Community Forum
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Connect with other users, share experiences, and get community support.
+              </p>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/forum")}
+              >
+                Join Discussion
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Mail className="mr-2 h-5 w-5" /> Email Support
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Reach out to our support team via email for personalized assistance.
+              </p>
+              <Button variant="outline" className="w-full">Contact Support</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <LifeBuoy className="mr-2 h-5 w-5" /> Live Chat
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Chat with our support team in real-time during business hours.
+              </p>
+              <Button variant="outline" className="w-full">Start Chat</Button>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Submit a Support Ticket</CardTitle>
-            <CardDescription>
-              Need help with something specific? Submit a support ticket and our team will get back to you.
-            </CardDescription>
+            <CardTitle className="text-xl">Still need help?</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="Your name" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Your email address" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    required
-                  />
+            <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
+              <div className="text-center md:text-left">
+                <p className="text-gray-600">
+                  Our team is available Monday through Friday, 9am-6pm EST.
+                </p>
+                <div className="mt-4 flex items-center justify-center md:justify-start">
+                  <Phone className="mr-2 h-5 w-5 text-gray-500" />
+                  <span className="font-medium">1-800-123-4567</span>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input 
-                    id="subject" 
-                    placeholder="Brief description of your issue" 
-                    value={subject} 
-                    onChange={(e) => setSubject(e.target.value)} 
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select 
-                    value={priority} 
-                    onValueChange={setPriority}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea 
-                  id="message" 
-                  placeholder="Please describe your issue in detail" 
-                  className="min-h-[150px]" 
-                  value={message} 
-                  onChange={(e) => setMessage(e.target.value)} 
-                  required
-                />
-              </div>
-              
-              <Button type="submit" className="w-full md:w-auto flex items-center gap-2">
-                <Send className="w-4 h-4" />
-                Submit Ticket
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact Support</CardTitle>
-            <CardDescription>
-              Need further assistance? Contact our support team directly.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="bg-card">
-                <CardContent className="flex items-center space-x-4 p-4">
-                  <Mail className="w-6 h-6 text-blue-500" />
-                  <div>
-                    <CardTitle>Email Us</CardTitle>
-                    <CardDescription>
-                      Send us an email, and we'll get back to you as soon as
-                      possible.
-                    </CardDescription>
-                    <Button variant="secondary">
-                      <a href="mailto:support@example.com">Contact Support</a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card">
-                <CardContent className="flex items-center space-x-4 p-4">
-                  <Phone className="w-6 h-6 text-green-500" />
-                  <div>
-                    <CardTitle>Call Us</CardTitle>
-                    <CardDescription>
-                      Give us a call during our business hours for immediate
-                      assistance.
-                    </CardDescription>
-                    <Button variant="secondary">
-                      <a href="tel:+18001234567">Call Support</a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <Button className="px-8">Contact Us</Button>
             </div>
           </CardContent>
         </Card>

@@ -1,79 +1,95 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Phone, Calendar, Clock } from "lucide-react";
 
-// Sample data for top callers
-const topCallersData = [
-  { id: 1, name: "John Smith", number: "(555) 123-4567", totalCalls: 12, avgDuration: "3m 24s", lastCallDate: "Apr 20, 2025" },
-  { id: 2, name: "Sarah Johnson", number: "(555) 987-6543", totalCalls: 8, avgDuration: "2m 58s", lastCallDate: "Apr 19, 2025" },
-  { id: 3, name: "Michael Brown", number: "(555) 456-7890", totalCalls: 7, avgDuration: "4m 12s", lastCallDate: "Apr 18, 2025" },
-  { id: 4, name: "Emily Davis", number: "(555) 234-5678", totalCalls: 5, avgDuration: "1m 45s", lastCallDate: "Apr 17, 2025" },
-  { id: 5, name: "David Wilson", number: "(555) 345-6789", totalCalls: 4, avgDuration: "2m 32s", lastCallDate: "Apr 15, 2025" }
-];
+export const TopCallersList = () => {
+  // Mock data for top callers
+  const topCallers = [
+    { 
+      name: "John Smith", 
+      phone: "(555) 123-4567", 
+      callCount: 8, 
+      lastCall: "Apr 29, 2025", 
+      averageDuration: "4:12"
+    },
+    { 
+      name: "Mary Johnson", 
+      phone: "(555) 234-5678", 
+      callCount: 6, 
+      lastCall: "Apr 27, 2025", 
+      averageDuration: "3:45"
+    },
+    { 
+      name: "Robert Williams", 
+      phone: "(555) 345-6789", 
+      callCount: 5, 
+      lastCall: "Apr 25, 2025", 
+      averageDuration: "5:32"
+    },
+    { 
+      name: "Elizabeth Brown", 
+      phone: "(555) 456-7890", 
+      callCount: 4, 
+      lastCall: "Apr 23, 2025", 
+      averageDuration: "2:58"
+    },
+    { 
+      name: "Michael Davis", 
+      phone: "(555) 567-8901", 
+      callCount: 3, 
+      lastCall: "Apr 20, 2025", 
+      averageDuration: "3:22"
+    }
+  ];
 
-export function TopCallersList() {
   return (
-    <Card className="shadow-sm mb-6">
+    <Card className="shadow-sm mt-6">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Top Callers</CardTitle>
-          <Button variant="outline" size="sm">
-            View All
-          </Button>
-        </div>
+        <CardTitle className="text-lg">Top Callers</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name / Number</TableHead>
-                <TableHead className="text-right">Total Calls</TableHead>
-                <TableHead className="text-right">Avg. Duration</TableHead>
-                <TableHead className="text-right">Last Call</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topCallersData.map((caller) => (
-                <TableRow key={caller.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{caller.name}</p>
-                      <p className="text-xs text-gray-500">{caller.number}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">{caller.totalCalls}</TableCell>
-                  <TableCell className="text-right">{caller.avgDuration}</TableCell>
-                  <TableCell className="text-right">{caller.lastCallDate}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <span className="sr-only">Add to contacts</span>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <span className="sr-only">View call log</span>
-                        <Search className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b dark:border-gray-700">
+                <th className="py-3 px-4 text-left font-medium text-gray-600 dark:text-gray-400">Caller</th>
+                <th className="py-3 px-4 text-left font-medium text-gray-600 dark:text-gray-400">Phone Number</th>
+                <th className="py-3 px-4 text-left font-medium text-gray-600 dark:text-gray-400">Call Count</th>
+                <th className="py-3 px-4 text-left font-medium text-gray-600 dark:text-gray-400">Last Call</th>
+                <th className="py-3 px-4 text-left font-medium text-gray-600 dark:text-gray-400">Avg. Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topCallers.map((caller, index) => (
+                <tr 
+                  key={index} 
+                  className={
+                    index !== topCallers.length - 1 
+                      ? "border-b dark:border-gray-700" 
+                      : ""
+                  }
+                >
+                  <td className="py-3 px-4">{caller.name}</td>
+                  <td className="py-3 px-4 flex items-center">
+                    <Phone size={16} className="mr-2 text-gray-500 dark:text-gray-400" />
+                    {caller.phone}
+                  </td>
+                  <td className="py-3 px-4">{caller.callCount}</td>
+                  <td className="py-3 px-4 flex items-center">
+                    <Calendar size={16} className="mr-2 text-gray-500 dark:text-gray-400" />
+                    {caller.lastCall}
+                  </td>
+                  <td className="py-3 px-4 flex items-center">
+                    <Clock size={16} className="mr-2 text-gray-500 dark:text-gray-400" />
+                    {caller.averageDuration}
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
       </CardContent>
     </Card>
   );
-}
+};

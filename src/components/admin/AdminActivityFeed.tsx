@@ -8,50 +8,16 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { format } from "date-fns";
+import { useAdminDashboardData } from "@/hooks/useAdminDashboardData"; 
 
 export const AdminActivityFeed = () => {
-  const activities = [
-    {
-      id: 1,
-      type: "New Signup",
-      user: "Sarah Johnson",
-      email: "sarah.j@example.com",
-      timestamp: "Today, 10:23 AM",
-      details: "Registered as a new user"
-    },
-    {
-      id: 2,
-      type: "Subscription",
-      user: "Michael Chen",
-      email: "mchen@company.co",
-      timestamp: "Today, 09:15 AM",
-      details: "Subscribed to Pro Plan ($49/month)"
-    },
-    {
-      id: 3,
-      type: "Referral",
-      user: "Alex Rivera",
-      email: "alex.r@domain.com",
-      timestamp: "Yesterday, 2:45 PM",
-      details: "Referred 2 new users"
-    },
-    {
-      id: 4,
-      type: "Transaction",
-      user: "Emma Wilson",
-      email: "ewilson@mail.org",
-      timestamp: "Yesterday, 11:32 AM",
-      details: "Payment of $149.00 received"
-    },
-    {
-      id: 5,
-      type: "Support",
-      user: "James Smith",
-      email: "jsmith@example.net",
-      timestamp: "Sep 23, 2023",
-      details: "Created new support ticket #45892"
-    }
-  ];
+  const { activityData, isLoading } = useAdminDashboardData();
+
+  if (isLoading) {
+    return <div className="flex justify-center my-6"><LoadingSpinner /></div>
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -59,22 +25,32 @@ export const AdminActivityFeed = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Event Type</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Timestamp</TableHead>
+            <TableHead>Admin</TableHead>
             <TableHead>Details</TableHead>
+            <TableHead>Time</TableHead>
+            <TableHead>IP Address</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {activities.map((activity) => (
-            <TableRow key={activity.id}>
-              <TableCell className="font-medium">{activity.type}</TableCell>
-              <TableCell>{activity.user}</TableCell>
-              <TableCell>{activity.email}</TableCell>
-              <TableCell>{activity.timestamp}</TableCell>
-              <TableCell>{activity.details}</TableCell>
+          {activityData && activityData.length > 0 ? (
+            activityData.map((activity) => (
+              <TableRow key={activity.id}>
+                <TableCell className="font-medium">{activity.event_type}</TableCell>
+                <TableCell>{activity.performed_by_email}</TableCell>
+                <TableCell>{activity.details}</TableCell>
+                <TableCell>{
+                  activity.timestamp ? format(new Date(activity.timestamp), 'MMM dd, yyyy, HH:mm') : 'N/A'
+                }</TableCell>
+                <TableCell>{activity.ip_address}</TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                No admin activity found
+              </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

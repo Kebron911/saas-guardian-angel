@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,8 +24,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useAdminFinanceData, PromoCodeCreate } from "@/hooks/useAdminFinanceData";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
-// Sample data
+// Sample data for dashboard stats
 const financeStats = {
   monthlyRevenue: 28490,
   activeSubscriptions: 2843,
@@ -34,42 +45,122 @@ const financeStats = {
   totalPayouts: 12480
 };
 
-const transactionsData = [
-  { id: "TXN-8294", user: "John Smith", email: "john@example.com", amount: 29.99, type: "Subscription", status: "Completed", gateway: "Stripe", createdAt: "2025-04-22" },
-  { id: "TXN-8293", user: "Sarah Johnson", email: "sarah@example.com", amount: 99.99, type: "Subscription", status: "Completed", gateway: "PayPal", createdAt: "2025-04-21" },
-  { id: "TXN-8292", user: "Michael Brown", email: "michael@example.com", amount: 149.99, type: "Upgrade", status: "Completed", gateway: "Stripe", createdAt: "2025-04-20" },
-  { id: "TXN-8291", user: "Jennifer Lee", email: "jennifer@example.com", amount: 29.99, type: "Subscription", status: "Failed", gateway: "PayPal", createdAt: "2025-04-19" },
-  { id: "TXN-8290", user: "David Wilson", email: "david@example.com", amount: 49.99, type: "Subscription", status: "Completed", gateway: "Stripe", createdAt: "2025-04-18" },
-  { id: "TXN-8289", user: "Lisa Garcia", email: "lisa@example.com", amount: 20.00, type: "Credit", status: "Completed", gateway: "Manual", createdAt: "2025-04-17" },
-  { id: "TXN-8288", user: "Robert Taylor", email: "robert@example.com", amount: 29.99, type: "Refund", status: "Completed", gateway: "Stripe", createdAt: "2025-04-16" }
-];
+const PromoCodeDialog = ({ onCreatePromoCode }: { onCreatePromoCode: (data: PromoCodeCreate) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState<PromoCodeCreate>({
+    code: '',
+    discount_percent: 0,
+    expiration_date: '',
+    max_uses: undefined,
+    status: 'active'
+  });
 
-const plansData = [
-  { name: "Basic", price: "29.99", duration: "Monthly", description: "Essential features for small businesses", status: "Active", subscribers: 785 },
-  { name: "Pro", price: "49.99", duration: "Monthly", description: "Advanced features for growing businesses", status: "Active", subscribers: 642 },
-  { name: "Enterprise", price: "149.99", duration: "Monthly", description: "Complete solution for large organizations", status: "Active", subscribers: 391 },
-  { name: "Basic Annual", price: "299.99", duration: "Yearly", description: "Essential features with annual discount", status: "Active", subscribers: 426 },
-  { name: "Pro Annual", price: "499.99", duration: "Yearly", description: "Advanced features with annual discount", status: "Active", subscribers: 312 },
-  { name: "Legacy", price: "19.99", duration: "Monthly", description: "Previous generation plan", status: "Inactive", subscribers: 287 }
-];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onCreatePromoCode(formData);
+    setOpen(false);
+    setFormData({
+      code: '',
+      discount_percent: 0,
+      expiration_date: '',
+      max_uses: undefined,
+      status: 'active'
+    });
+  };
 
-const subscriptionsData = [
-  { user: "John Smith", plan: "Pro", status: "Active", startDate: "2025-01-15", endDate: "2025-05-15", gateway: "Stripe", autoRenew: true },
-  { user: "Sarah Johnson", plan: "Enterprise", status: "Active", startDate: "2024-11-22", endDate: "2025-11-22", gateway: "PayPal", autoRenew: true },
-  { user: "Michael Brown", plan: "Basic Annual", status: "Active", startDate: "2024-12-03", endDate: "2025-12-03", gateway: "Stripe", autoRenew: true },
-  { user: "Jennifer Lee", plan: "Basic", status: "Expired", startDate: "2025-01-10", endDate: "2025-04-10", gateway: "PayPal", autoRenew: false },
-  { user: "David Wilson", plan: "Pro Annual", status: "Active", startDate: "2024-09-18", endDate: "2025-09-18", gateway: "Stripe", autoRenew: true },
-  { user: "Lisa Garcia", plan: "Basic", status: "Canceled", startDate: "2025-02-05", endDate: "2025-05-05", gateway: "PayPal", autoRenew: false },
-  { user: "Robert Taylor", plan: "Pro", status: "Trial", startDate: "2025-04-12", endDate: "2025-04-26", gateway: "Manual", autoRenew: false }
-];
-
-const promoCodesData = [
-  { code: "WELCOME25", discount: 25, expiration: "2025-06-30", usageCount: 187, maxUses: 500, status: "Active" },
-  { code: "SUMMER2025", discount: 20, expiration: "2025-08-31", usageCount: 42, maxUses: 200, status: "Active" },
-  { code: "SPECIALOFFER", discount: 15, expiration: "2025-05-15", usageCount: 98, maxUses: 100, status: "Expired" },
-  { code: "AFFILIATE10", discount: 10, expiration: null, usageCount: 265, maxUses: null, status: "Active" },
-  { code: "BLACKFRIDAY", discount: 40, expiration: "2025-11-30", usageCount: 0, maxUses: 300, status: "Inactive" }
-];
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Create New Promo Code
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create New Promo Code</DialogTitle>
+          <DialogDescription>
+            Add a new promotional code to your system.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="code" className="text-right">
+                Code
+              </Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="discount" className="text-right">
+                Discount %
+              </Label>
+              <Input
+                id="discount"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.discount_percent}
+                onChange={(e) => setFormData({ ...formData, discount_percent: parseFloat(e.target.value) })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="expiration" className="text-right">
+                Expiration
+              </Label>
+              <Input
+                id="expiration"
+                type="datetime-local"
+                value={formData.expiration_date}
+                onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="maxUses" className="text-right">
+                Max Uses
+              </Label>
+              <Input
+                id="maxUses"
+                type="number"
+                min="1"
+                value={formData.max_uses || ''}
+                onChange={(e) => setFormData({ ...formData, max_uses: e.target.value ? parseInt(e.target.value) : undefined })}
+                className="col-span-3"
+                placeholder="Unlimited"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Status
+              </Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit">Create Promo Code</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const FinanceDashboardTab = () => (
   <div>
@@ -156,6 +247,19 @@ const FinanceDashboardTab = () => (
 );
 
 const TransactionsTab = () => {
+  const { transactions, fetchTransactions, isLoading } = useAdminFinanceData();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all-types");
+  const [statusFilter, setStatusFilter] = useState("all-status");
+
+  const handleSearch = () => {
+    fetchTransactions(searchTerm, typeFilter, statusFilter);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
+  }
+
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
@@ -164,11 +268,14 @@ const TransactionsTab = () => {
           <Input 
             placeholder="Search transactions..."
             className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
         </div>
         
         <div className="flex gap-2">
-          <Select defaultValue="all-types">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
@@ -180,7 +287,7 @@ const TransactionsTab = () => {
             </SelectContent>
           </Select>
           
-          <Select defaultValue="all-status">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
@@ -192,10 +299,9 @@ const TransactionsTab = () => {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" className="flex items-center">
-            <Filter className="mr-2 h-4 w-4" />
-            <span>Date Range</span>
-            <ChevronDown className="ml-2 h-4 w-4" />
+          <Button onClick={handleSearch} variant="outline">
+            <Search className="mr-2 h-4 w-4" />
+            Search
           </Button>
         </div>
       </div>
@@ -216,10 +322,10 @@ const TransactionsTab = () => {
               </tr>
             </thead>
             <tbody>
-              {transactionsData.map((transaction) => (
+              {transactions.map((transaction) => (
                 <tr key={transaction.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium">{transaction.id}</td>
-                  <td className="px-4 py-3 text-sm">{transaction.user}</td>
+                  <td className="px-4 py-3 text-sm font-medium">{transaction.id.substring(0, 8)}...</td>
+                  <td className="px-4 py-3 text-sm">{transaction.user_name}</td>
                   <td className="px-4 py-3 text-sm">{transaction.email}</td>
                   <td className="px-4 py-3 text-sm text-right">
                     <span className={transaction.type === 'Refund' ? 'text-red-600' : 'text-gray-900'}>
@@ -246,29 +352,75 @@ const TransactionsTab = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm">{transaction.gateway}</td>
-                  <td className="px-4 py-3 text-sm">{transaction.createdAt}</td>
+                  <td className="px-4 py-3 text-sm">{new Date(transaction.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {transactions.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No transactions found matching your search criteria
+          </div>
+        )}
       </Card>
     </div>
   );
 };
 
 const PlansTab = () => {
+  const { plans, fetchPlans, isLoading } = useAdminFinanceData();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all-status");
+
+  const handleSearch = () => {
+    fetchPlans(searchTerm, statusFilter);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
+  }
+
   return (
     <div>
-      <div className="flex justify-end mb-6 gap-2">
-        <Button variant="outline">
-          <Star className="mr-2 h-4 w-4" />
-          Set Default Plan
-        </Button>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Plan
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input 
+            placeholder="Search plans..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-status">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button onClick={handleSearch} variant="outline">
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
+          
+          <Button variant="outline">
+            <Star className="mr-2 h-4 w-4" />
+            Set Default Plan
+          </Button>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Plan
+          </Button>
+        </div>
       </div>
       
       <Card>
@@ -285,19 +437,19 @@ const PlansTab = () => {
               </tr>
             </thead>
             <tbody>
-              {plansData.map((plan, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
+              {plans.map((plan) => (
+                <tr key={plan.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium">{plan.name}</td>
                   <td className="px-4 py-3 text-sm">${plan.price} / {plan.duration}</td>
                   <td className="px-4 py-3 text-sm">{plan.description}</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      plan.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      plan.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
                       {plan.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm">{plan.subscribers}</td>
+                  <td className="px-4 py-3 text-sm">{plan.subscriber_count}</td>
                   <td className="px-4 py-3 text-sm text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon">
@@ -315,12 +467,30 @@ const PlansTab = () => {
             </tbody>
           </table>
         </div>
+        {plans.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No plans found matching your search criteria
+          </div>
+        )}
       </Card>
     </div>
   );
 };
 
 const SubscriptionsTab = () => {
+  const { subscriptions, fetchSubscriptions, isLoading } = useAdminFinanceData();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState("all-plans");
+  const [statusFilter, setStatusFilter] = useState("all-status");
+
+  const handleSearch = () => {
+    fetchSubscriptions(searchTerm, planFilter, statusFilter);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
+  }
+
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
@@ -329,11 +499,14 @@ const SubscriptionsTab = () => {
           <Input 
             placeholder="Search subscriptions..."
             className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
         </div>
         
         <div className="flex gap-2">
-          <Select defaultValue="all-plans">
+          <Select value={planFilter} onValueChange={setPlanFilter}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Plans" />
             </SelectTrigger>
@@ -345,18 +518,23 @@ const SubscriptionsTab = () => {
             </SelectContent>
           </Select>
           
-          <Select defaultValue="all-status">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-status">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
               <SelectItem value="canceled">Canceled</SelectItem>
-              <SelectItem value="trial">Trial</SelectItem>
+              <SelectItem value="trialing">Trial</SelectItem>
             </SelectContent>
           </Select>
+          
+          <Button onClick={handleSearch} variant="outline">
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
         </div>
       </div>
       
@@ -375,25 +553,29 @@ const SubscriptionsTab = () => {
               </tr>
             </thead>
             <tbody>
-              {subscriptionsData.map((subscription, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium">{subscription.user}</td>
-                  <td className="px-4 py-3 text-sm">{subscription.plan}</td>
+              {subscriptions.map((subscription) => (
+                <tr key={subscription.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm font-medium">{subscription.user_name}</td>
+                  <td className="px-4 py-3 text-sm">{subscription.plan_name}</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      subscription.status === 'Active' ? 'bg-green-100 text-green-800' :
-                      subscription.status === 'Expired' ? 'bg-red-100 text-red-800' :
-                      subscription.status === 'Canceled' ? 'bg-gray-100 text-gray-800' :
+                      subscription.status === 'active' ? 'bg-green-100 text-green-800' :
+                      subscription.status === 'inactive' ? 'bg-red-100 text-red-800' :
+                      subscription.status === 'canceled' ? 'bg-gray-100 text-gray-800' :
                       'bg-blue-100 text-blue-800'
                     }`}>
                       {subscription.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm">{subscription.startDate}</td>
-                  <td className="px-4 py-3 text-sm">{subscription.endDate}</td>
-                  <td className="px-4 py-3 text-sm">{subscription.gateway}</td>
+                  <td className="px-4 py-3 text-sm">
+                    {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="px-4 py-3 text-sm">{subscription.stripe_customer_id ? 'Stripe' : 'Manual'}</td>
                   <td className="px-4 py-3 text-sm text-center">
-                    {subscription.autoRenew ? (
+                    {subscription.auto_renew ? (
                       <span className="inline-block h-4 w-4 rounded-full bg-green-500"></span>
                     ) : (
                       <span className="inline-block h-4 w-4 rounded-full bg-gray-300"></span>
@@ -404,19 +586,71 @@ const SubscriptionsTab = () => {
             </tbody>
           </table>
         </div>
+        {subscriptions.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No subscriptions found matching your search criteria
+          </div>
+        )}
       </Card>
     </div>
   );
 };
 
 const PromoCodesTab = () => {
+  const { promoCodes, fetchPromoCodes, createPromoCode, isLoading } = useAdminFinanceData();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all-status");
+
+  const handleSearch = () => {
+    fetchPromoCodes(searchTerm, statusFilter);
+  };
+
+  const handleCreatePromoCode = async (data: PromoCodeCreate) => {
+    try {
+      await createPromoCode(data);
+    } catch (error) {
+      console.error("Failed to create promo code:", error);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
+  }
+
   return (
     <div>
-      <div className="flex justify-end mb-6">
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Promo Code
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input 
+            placeholder="Search promo codes..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-status">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button onClick={handleSearch} variant="outline">
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
+          
+          <PromoCodeDialog onCreatePromoCode={handleCreatePromoCode} />
+        </div>
       </div>
       
       <Card>
@@ -434,17 +668,19 @@ const PromoCodesTab = () => {
               </tr>
             </thead>
             <tbody>
-              {promoCodesData.map((promo, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
+              {promoCodes.map((promo) => (
+                <tr key={promo.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium">{promo.code}</td>
-                  <td className="px-4 py-3 text-sm">{promo.discount}%</td>
-                  <td className="px-4 py-3 text-sm">{promo.expiration || 'Never'}</td>
-                  <td className="px-4 py-3 text-sm">{promo.usageCount}</td>
-                  <td className="px-4 py-3 text-sm">{promo.maxUses || 'Unlimited'}</td>
+                  <td className="px-4 py-3 text-sm">{promo.discount_percent}%</td>
+                  <td className="px-4 py-3 text-sm">
+                    {promo.expiration_date ? new Date(promo.expiration_date).toLocaleDateString() : 'Never'}
+                  </td>
+                  <td className="px-4 py-3 text-sm">{promo.usage_count}</td>
+                  <td className="px-4 py-3 text-sm">{promo.max_uses || 'Unlimited'}</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      promo.status === 'Active' ? 'bg-green-100 text-green-800' :
-                      promo.status === 'Expired' ? 'bg-red-100 text-red-800' :
+                      promo.status === 'active' ? 'bg-green-100 text-green-800' :
+                      promo.status === 'expired' ? 'bg-red-100 text-red-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {promo.status}
@@ -467,6 +703,11 @@ const PromoCodesTab = () => {
             </tbody>
           </table>
         </div>
+        {promoCodes.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No promo codes found matching your search criteria
+          </div>
+        )}
       </Card>
     </div>
   );

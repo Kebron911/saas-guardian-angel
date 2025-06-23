@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Layout, 
   LayoutContent, 
@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface AffiliateLayoutProps {
   children: React.ReactNode;
@@ -37,7 +38,9 @@ interface AffiliateLayoutProps {
 
 const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
   const location = useLocation();
-  const { setRole } = useAuth();
+  const navigate = useNavigate();
+  const { setRole, signOut } = useAuth();
+  const { toast } = useToast();
   
   const menuItems = [
     { 
@@ -77,15 +80,33 @@ const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
     window.location.href = "/dashboard";
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out successfully",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Layout>
         <LayoutSidebar className="fixed top-0 left-0 h-screen w-64 bg-card shadow-md z-40">
           <div className="py-6 px-4">
             <Link to="/" className="flex items-center font-bold text-[20px] text-foreground mb-10">
-              <div className="w-[30px] h-[30px] bg-[#1A237E] rounded-full mr-3 relative">
-                <div className="absolute w-[15px] h-[12px] bg-white rounded-t-full top-2 left-[7px]" />
-              </div>
+              <img src="/lovable-uploads/img/logo/updatedlogo1.png" 
+                alt="Professional AI Assistants" 
+                className="h-10 mr-3 " style={{ width: 'auto', height: '3rem' }}
+              />
               <span>Affiliate Program</span>
             </Link>
             
@@ -105,6 +126,15 @@ const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
                   {item.label}
                 </Link>
               ))}
+              <div className="mb-1 mt-6">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <LogOut size={18} className="mr-3" />
+                  Sign Out
+                </button>
+              </div>
             </nav>
           </div>
           
@@ -118,9 +148,6 @@ const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
                 <p className="text-sm font-medium">John Smith</p>
                 <p className="text-xs text-gray-500 truncate">Affiliate Partner</p>
               </div>
-              <Button variant="ghost" size="icon" className="ml-1">
-                <LogOut className="h-5 w-5" />
-              </Button>
             </div>
           </div>
         </LayoutSidebar>

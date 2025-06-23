@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +10,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  CreditCard
+  CreditCard,
+  Users
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -34,6 +34,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: <Phone size={18} />, label: "Receptionist Setup", path: "/dashboard/setup" },
     { icon: <BarChart2 size={18} />, label: "Reports", path: "/dashboard/reports" },
     { icon: <CreditCard size={18} />, label: "Billing", path: "/dashboard/billing" },
+    { icon: <Users size={18} />, label: "Affiliate Program", path: "/dashboard/affiliate" },
     { icon: <Settings size={18} />, label: "Settings", path: "/dashboard/settings" },
     { icon: <HelpCircle size={18} />, label: "Help & Support", path: "/dashboard/help" },
   ];
@@ -43,11 +44,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Top mobile navigation bar */}
-      <div className="lg:hidden bg-white shadow-sm py-4 px-6 flex justify-between items-center">
+      <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm py-4 px-6 flex justify-between items-center">
         <div className="flex items-center">
-          <Link to="/" className="text-xl font-bold text-[#1A237E]">AI Receptionist</Link>
+          
+          <Link to="/" className="text-xl font-bold text-[#1A237E] dark:text-white">AI Receptionist</Link>
         </div>
         <button onClick={toggleMobileMenu} className="p-2">
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -56,9 +58,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       <div className="flex">
         {/* Sidebar - desktop view */}
-        <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200 h-screen fixed">
+        <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen fixed">
           <div className="p-6">
-            <Link to="/" className="text-xl font-bold text-[#1A237E]">AI Receptionist</Link>
+            <Link to="/" className="text-xl font-bold text-[#1A237E] dark:text-white">AI Receptionist</Link>
           </div>
           <nav className="flex-1 overflow-y-auto">
             <ul className="px-4 py-2">
@@ -68,8 +70,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     to={item.path}
                     className={`flex items-center px-4 py-3 text-sm rounded-lg ${
                       location.pathname === item.path
-                        ? "bg-[#E3F2FD] text-[#1A237E] font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-[#E3F2FD] text-[#1A237E] dark:bg-[#1A237E]/20 dark:text-white font-medium"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <span className="mr-3">{item.icon}</span>
@@ -80,7 +82,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <li className="mb-1 mt-6">
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 hover:bg-red-50"
+                  className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <LogOut size={18} className="mr-3" />
                   Sign Out
@@ -92,10 +94,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 bg-white">
+          <div className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-gray-800">
             <div className="flex justify-end p-4">
               <button onClick={toggleMobileMenu} className="p-2">
-                <X size={24} />
+                <X size={24} className="text-gray-900 dark:text-gray-100" />
               </button>
             </div>
             <nav className="px-6 py-4">
@@ -106,8 +108,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       to={item.path}
                       className={`flex items-center px-4 py-3 text-sm rounded-lg ${
                         location.pathname === item.path
-                          ? "bg-[#E3F2FD] text-[#1A237E] font-medium"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-[#E3F2FD] text-[#1A237E] dark:bg-[#1A237E]/20 dark:text-white font-medium"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                       onClick={toggleMobileMenu}
                     >
@@ -119,7 +121,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <li className="mb-3 mt-6">
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 hover:bg-red-50"
+                    className="w-full flex items-center px-4 py-3 text-sm rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <LogOut size={18} className="mr-3" />
                     Sign Out

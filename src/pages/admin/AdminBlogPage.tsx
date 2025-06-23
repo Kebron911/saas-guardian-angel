@@ -1,86 +1,440 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import BlogPostList from "@/components/admin/blog/BlogPostList";
-import BlogPostEditor from "@/components/admin/blog/BlogPostEditor";
-import BlogCategoriesList from "@/components/admin/blog/BlogCategoriesList";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, Tag, RefreshCw, Filter, ArrowUpDown } from "lucide-react";
+import { usePostgresBlogData } from "@/hooks/usePostgresBlogData";
+import { useBlogData } from "@/hooks/useBlogData";
+import BlogPostForm from "@/components/admin/BlogPostForm";
+import BlogCategoryForm from "@/components/admin/BlogCategoryForm";
+import { BlogCategory, BlogPostWithCategory, BlogPostInput, BlogCategoryInput } from "@/types/blog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import BlogPostsTable from "@/components/admin/BlogPostsTable";
+import BlogCategoriesTable from "@/components/admin/BlogCategoriesTable";
+import BlogSampleCreator from "@/components/admin/BlogSampleCreator";
 
 const AdminBlogPage = () => {
-  const [selectedTab, setSelectedTab] = useState("posts");
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [isNewPost, setIsNewPost] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isPostFormOpen, setIsPostFormOpen] = useState(false);
+  const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(undefined);
+  const [selectedCategory, setSelectedCategory] = useState<BlogCategory | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: "post" | "category" } | null>(null);
+  const [currentTab, setCurrentTab] = useState("published");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const handleCreateNewPost = () => {
-    setSelectedPostId(null);
-    setIsNewPost(true);
-    setSelectedTab("editor");
-  };
+  // Filter and sort states
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
-  const handleEditPost = (postId: string) => {
-    setSelectedPostId(postId);
-    setIsNewPost(false);
-    setSelectedTab("editor");
-  };
+  // PostgreSQL data for posts
+  const { 
+    publishedPosts, 
+    draftPosts, 
+    isLoading: postsLoading, 
+    error: postsError,
+    fetchPosts,
+    deletePost
+  } = usePostgresBlogData();
   
-  const handlePostSaved = () => {
-    toast.success(isNewPost ? "Blog post created successfully" : "Blog post updated successfully");
-    setSelectedTab("posts");
-    setIsNewPost(false);
+  // Supabase data for categories (keeping existing functionality)
+  const { 
+    categories, 
+    isLoading: categoriesLoading, 
+    error: categoriesError,
+    createPost, 
+    updatePost,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    fetchPosts: fetchSupabasePosts
+  } = useBlogData();
+  
+  const isLoading = postsLoading || categoriesLoading;
+  const error = postsError || categoriesError;
+  
+  // Filter and sort functions
+  const filterAndSortPosts = (posts: any[]) => {
+    let filtered = posts.filter(post => 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(post => post.category === categoryFilter);
+    }
+
+    return filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case "title":
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case "category":
+          aValue = a.category?.toLowerCase() || "";
+          bValue = b.category?.toLowerCase() || "";
+          break;
+        case "views":
+          aValue = a.views || 0;
+          bValue = b.views || 0;
+          break;
+        case "comments":
+          aValue = a.comments || 0;
+          bValue = b.comments || 0;
+          break;
+        case "date":
+        default:
+          aValue = new Date(a.date || 0).getTime();
+          bValue = new Date(b.date || 0).getTime();
+          break;
+      }
+      
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
   };
 
-  const handlePostCancel = () => {
-    setSelectedTab("posts");
-    setIsNewPost(false);
-    setSelectedPostId(null);
+  const getUniqueCategories = (posts: any[]) => {
+    const categories = [...new Set(posts.map(post => post.category).filter(Boolean))];
+    return categories.sort();
   };
-
+  
+  const handleCreatePost = () => {
+    setSelectedPost(undefined);
+    setIsPostFormOpen(true);
+  };
+  
+  const handleEditPost = (post: any) => {
+    setSelectedPost(post);
+    setIsPostFormOpen(true);
+  };
+  
+  const handleViewPost = (slug: string) => {
+    window.open(`/blog/${slug}`, '_blank');
+  };
+  
+  const handleDeletePost = (id: string) => {
+    setItemToDelete({ id, type: "post" });
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleCreateCategory = () => {
+    setSelectedCategory(undefined);
+    setIsCategoryFormOpen(true);
+  };
+  
+  const handleEditCategory = (category: BlogCategory) => {
+    setSelectedCategory(category);
+    setIsCategoryFormOpen(true);
+  };
+  
+  const handleDeleteCategory = (id: string) => {
+    setItemToDelete({ id, type: "category" });
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      if (itemToDelete.type === "post") {
+        await deletePost(itemToDelete.id);
+      } else {
+        await deleteCategory(itemToDelete.id);
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+    
+    setDeleteDialogOpen(false);
+  };
+  
+  const handleSubmitPost = async (values: BlogPostInput, categoryIds: string[]) => {
+    if (selectedPost) {
+      await updatePost(selectedPost.id, values, categoryIds);
+    } else {
+      await createPost(values, categoryIds);
+    }
+    // Refresh PostgreSQL data
+    await fetchPosts();
+  };
+  
+  const handleSubmitCategory = async (values: BlogCategoryInput) => {
+    if (selectedCategory) {
+      await updateCategory(selectedCategory.id, values);
+    } else {
+      await createCategory(values);
+    }
+  };
+  
+  const getSelectedCategoryIds = () => {
+    if (!selectedPost) return [];
+    return selectedPost.categories ? selectedPost.categories.map((cat: any) => cat.id) : [];
+  };
+  
+  const handleTabChange = (value: string) => {
+    setCurrentTab(value);
+  };
+  
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchPosts();
+      await fetchSupabasePosts();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading blog data...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
+  
+  const hasContent = publishedPosts.length > 0 || draftPosts.length > 0 || categories.length > 0;
+  const filteredPublishedPosts = filterAndSortPosts(publishedPosts);
+  const filteredDraftPosts = filterAndSortPosts(draftPosts);
+  const allPosts = [...publishedPosts, ...draftPosts];
+  const uniqueCategories = getUniqueCategories(allPosts);
+  
   return (
     <AdminLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-800">Blog Management</h2>
-        <Button onClick={handleCreateNewPost}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          New Post
-        </Button>
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">Blog Management</h2>
+        <p className="text-gray-600 dark:text-gray-400">Create and manage your blog content</p>
       </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <Tabs defaultValue={selectedTab} value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-            <TabsList>
-              <TabsTrigger value="posts">Blog Posts</TabsTrigger>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              {selectedTab === "editor" && (
-                <TabsTrigger value="editor">
-                  {isNewPost ? "New Post" : "Edit Post"}
-                </TabsTrigger>
-              )}
-            </TabsList>
+      
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 dark:bg-red-900/30 dark:border-red-700">
+          <p className="text-red-700 dark:text-red-400">{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
+        </div>
+      )}
+      
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+        <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 h-4 w-4" />
+            <Input 
+              placeholder="Search posts..." 
+              className="pl-10 w-full md:w-[250px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
           
-            <CardContent className="pt-4">
-              <TabsContent value="posts" className="mt-0">
-                <BlogPostList onEditPost={handleEditPost} />
-              </TabsContent>
-              <TabsContent value="categories" className="mt-0">
-                <BlogCategoriesList />
-              </TabsContent>
-              <TabsContent value="editor" className="mt-0">
-                <BlogPostEditor 
-                  postId={selectedPostId} 
-                  isNew={isNewPost} 
-                  onSaved={handlePostSaved} 
-                  onCancel={handlePostCancel}
-                />
-              </TabsContent>
-            </CardContent>
+          {(currentTab === "published" || currentTab === "drafts") && (
+            <>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {uniqueCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-[150px]">
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="category">Category</SelectItem>
+                  <SelectItem value="views">Views</SelectItem>
+                  <SelectItem value="comments">Comments</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                title={`Sort ${sortOrder === "asc" ? "Descending" : "Ascending"}`}
+              >
+                <ArrowUpDown className={`h-4 w-4 ${sortOrder === "desc" ? "rotate-180" : ""}`} />
+              </Button>
+            </>
+          )}
+        </div>
+        
+        <div className="flex gap-2 w-full lg:w-auto">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="lg:hidden"
+            title="Refresh Data"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="hidden lg:flex"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button className="w-full lg:w-auto" onClick={handleCreatePost}>
+            <Plus className="mr-2 h-4 w-4" /> New Post
+          </Button>
+        </div>
+      </div>
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <Tabs defaultValue="published" value={currentTab} onValueChange={handleTabChange}>
+            <TabsList>
+              <TabsTrigger value="published">Published</TabsTrigger>
+              <TabsTrigger value="drafts">Drafts</TabsTrigger>
+              <TabsTrigger value="categories">Categories</TabsTrigger>
+              {!hasContent && <TabsTrigger value="samples">Sample Content</TabsTrigger>}
+            </TabsList>
           </Tabs>
         </CardHeader>
+        <CardContent>
+          <Tabs value={currentTab} onValueChange={handleTabChange}>
+            <TabsContent value="published" className="mt-0">
+              <BlogPostsTable 
+                posts={filteredPublishedPosts}
+                onEdit={handleEditPost}
+                onDelete={handleDeletePost}
+                onView={handleViewPost}
+                filterQuery=""
+                showPublished={true}
+              />
+            </TabsContent>
+            
+            <TabsContent value="drafts" className="mt-0">
+              <BlogPostsTable 
+                posts={filteredDraftPosts}
+                onEdit={handleEditPost}
+                onDelete={handleDeletePost}
+                onView={handleViewPost}
+                filterQuery=""
+                showPublished={false}
+              />
+            </TabsContent>
+            
+            <TabsContent value="categories" className="mt-0">
+              <BlogCategoriesTable 
+                categories={categories}
+                posts={[]}
+                onEdit={handleEditCategory}
+                onDelete={handleDeleteCategory}
+              />
+              
+              <div className="mt-4">
+                <Button variant="outline" onClick={handleCreateCategory}>
+                  <Tag className="mr-2 h-4 w-4" /> Add Category
+                </Button>
+              </div>
+            </TabsContent>
+            
+            {!hasContent && (
+              <TabsContent value="samples" className="mt-0">
+                <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-md">
+                  <h3 className="text-lg font-medium mb-4">Create Sample Blog Content</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    You don't have any blog posts or categories yet. Create sample content to get started quickly.
+                  </p>
+                  <BlogSampleCreator onComplete={fetchPosts} />
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
+        </CardContent>
       </Card>
+      
+      {/* Post Form Dialog */}
+      {isPostFormOpen && (
+        <BlogPostForm
+          post={selectedPost}
+          categories={categories}
+          selectedCategoryIds={getSelectedCategoryIds()}
+          isOpen={isPostFormOpen}
+          onClose={() => setIsPostFormOpen(false)}
+          onSubmit={handleSubmitPost}
+        />
+      )}
+      
+      {/* Category Form Dialog */}
+      {isCategoryFormOpen && (
+        <BlogCategoryForm
+          category={selectedCategory}
+          isOpen={isCategoryFormOpen}
+          onClose={() => setIsCategoryFormOpen(false)}
+          onSubmit={handleSubmitCategory}
+        />
+      )}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToDelete?.type === "post" 
+                ? "Are you sure you want to delete this post? This action cannot be undone."
+                : "Are you sure you want to delete this category? This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };

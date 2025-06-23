@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { DatabaseInterface } from '@/database_interface';
 
 type Role = 'user' | 'admin' | 'affiliate';
 
@@ -15,6 +14,9 @@ interface AuthContextType {
   user: User | null;
   session: any | null;
   signOut: () => Promise<void>;
+  isAffiliate: boolean;
+  applyForAffiliate: () => Promise<void>;
+  checkUserRole: () => Promise<Role>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,9 +33,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email: 'demo@example.com'
     });
     
-    // This is a placeholder. In a real app, you would use Supabase Auth
-    // and have proper session management
-  }, []);
+    // Check role on initial load
+    if (user) {
+      checkUserRole().then(detectedRole => {
+        setRole(detectedRole);
+      });
+    }
+  }, [user?.id]);
 
   const signOut = async () => {
     // In a real app with Supabase Auth:
@@ -43,8 +49,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRole('user');
   };
 
+  const isAffiliate = role === 'affiliate';
+
+  const applyForAffiliate = async () => {
+    // In a real app, this would make an API call to submit the application
+    // For demo purposes, we'll just set the role
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setRole('affiliate');
+        resolve();
+      }, 1000);
+    });
+  };
+
+  const checkUserRole = async (): Promise<Role> => {
+    if (!user) return 'user';
+    
+    const email = user.email?.toLowerCase() || '';
+    
+    if (email === 'admin@example.com') {
+      return 'admin';
+    } else if (email === 'affiliate@example.com') {
+      return 'affiliate';
+    }
+    
+    try {
+      // Check if the user has the admin role
+      const adminRole = await DatabaseInterface.select('user_roles', { 
+        user_id: user.id, 
+        role: 'admin' 
+      });
+      
+      if (adminRole && adminRole.length > 0) {
+        return 'admin';
+      }
+      
+      // Check if the user has an affiliate entry
+      const affiliate = await DatabaseInterface.select('affiliates', {
+        user_id: user.id
+      });
+        
+      if (affiliate && affiliate.length > 0) {
+        return 'affiliate';
+      }
+    } catch (error) {
+      console.error("Error checking user role:", error);
+    }
+
+    return 'user';
+  };
+
   return (
-    <AuthContext.Provider value={{ role, setRole, user, session, signOut }}>
+    <AuthContext.Provider value={{ 
+      role, 
+      setRole, 
+      user, 
+      session, 
+      signOut,
+      isAffiliate,
+      applyForAffiliate,
+      checkUserRole
+    }}>
       {children}
     </AuthContext.Provider>
   );

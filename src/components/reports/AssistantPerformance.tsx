@@ -1,69 +1,56 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 
-export function AssistantPerformance() {
+export const AssistantPerformance = () => {
+  // Mock data - in a real app would come from props or a data hook
+  const data = [
+    { metric: "Response", score: 98 },
+    { metric: "Accuracy", score: 92 },
+    { metric: "Helpfulness", score: 95 },
+    { metric: "Resolution", score: 88 }
+  ];
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Assistant Performance</CardTitle>
+        <CardTitle className="text-lg">Assistant Performance</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500">Average Response Time</p>
-                <p className="text-xl font-semibold">1.8s</p>
-              </div>
-              <div className="flex items-center text-green-600">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium">12% faster</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500">Calls Handled Without Fallback</p>
-                <p className="text-xl font-semibold">94.2%</p>
-              </div>
-              <div className="flex items-center text-green-600">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium">+3.5%</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500">Bookings Handled Automatically</p>
-                <p className="text-xl font-semibold">86.5%</p>
-              </div>
-              <div className="flex items-center text-red-600">
-                <TrendingDown className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium">-1.2%</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500">Customer Satisfaction Score</p>
-                <p className="text-xl font-semibold">4.8/5</p>
-              </div>
-              <div className="flex items-center text-green-600">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium">+0.2</span>
-              </div>
-            </div>
-          </div>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+              barSize={40}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="metric" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip
+                formatter={(value) => [`${value}%`, "Score"]}
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #f0f0f0",
+                  borderRadius: "4px",
+                }}
+              />
+              <Bar 
+                dataKey="score" 
+                fill="#1A237E" 
+                radius={[4, 4, 0, 0]} 
+                label={{ position: 'top', formatter: (value) => `${value}%` }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
   );
-}
+};

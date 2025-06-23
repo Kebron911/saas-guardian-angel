@@ -1,45 +1,47 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { FileDown, Mail, Printer } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-export function DownloadReports() {
+export const DownloadReports = () => {
+  const { toast } = useToast();
+  
+  const handleDownload = (format: string) => {
+    toast({
+      title: "Report Generated",
+      description: `Your ${format} report is being downloaded.`,
+    });
+  };
+  
+  const handleEmail = () => {
+    toast({
+      title: "Report Emailed",
+      description: "The report has been sent to your email address.",
+    });
+  };
+  
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Download Reports</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium mb-2">Call Details Report</h4>
-            <p className="text-sm text-gray-500 mb-4">Complete log of all calls with duration, outcome, and timestamps.</p>
-            <Button className="bg-[#1A237E] hover:bg-[#0E1358] w-full">
-              <Download className="h-4 w-4 mr-2" />
-              Download as CSV
-            </Button>
-          </div>
-          
-          <div className="flex-1 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium mb-2">Performance Summary</h4>
-            <p className="text-sm text-gray-500 mb-4">AI assistant metrics, handling rates, and comparison to previous periods.</p>
-            <Button className="bg-[#1A237E] hover:bg-[#0E1358] w-full">
-              <Download className="h-4 w-4 mr-2" />
-              Download as PDF
-            </Button>
-          </div>
-          
-          <div className="flex-1 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium mb-2">Custom Report</h4>
-            <p className="text-sm text-gray-500 mb-4">Build a customized report with the exact metrics you need.</p>
-            <Button className="bg-[#1A237E] hover:bg-[#0E1358] w-full">
-              <Download className="h-4 w-4 mr-2" />
-              Create Custom Report
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="mt-6 flex flex-wrap gap-4">
+      <Button variant="outline" onClick={() => handleDownload("PDF")}>
+        <FileDown className="h-4 w-4 mr-2" />
+        Export PDF
+      </Button>
+      
+      <Button variant="outline" onClick={() => handleDownload("Excel")}>
+        <FileDown className="h-4 w-4 mr-2" />
+        Export Excel
+      </Button>
+      
+      <Button variant="outline" onClick={handleEmail}>
+        <Mail className="h-4 w-4 mr-2" />
+        Email Report
+      </Button>
+      
+      <Button variant="outline" onClick={() => handleDownload("Print")}>
+        <Printer className="h-4 w-4 mr-2" />
+        Print Report
+      </Button>
+    </div>
   );
-}
+};

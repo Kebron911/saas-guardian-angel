@@ -1,27 +1,26 @@
-
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { setRole } = useAuth();
+  const { setRole, checkUserRole } = useAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [selectedRole, setSelectedRole] = React.useState<"user" | "admin" | "affiliate">("user");
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     // Validate email format
     const predefinedUsers = {
@@ -30,38 +29,39 @@ const LoginPage = () => {
       "affiliate@example.com": { role: "affiliate", route: "/affiliate" },
     };
 
-    // Check if the email matches one of our predefined users
-    if (Object.keys(predefinedUsers).includes(email)) {
-      // Set the role based on the email
-      const userRole = predefinedUsers[email as keyof typeof predefinedUsers].role as "user" | "admin" | "affiliate";
-      const userRoute = predefinedUsers[email as keyof typeof predefinedUsers].route;
-      
-      setRole(userRole);
-      
-      toast({
-        title: "Login successful",
-        description: `Logged in as ${userRole}`,
-      });
-      
-      // Navigate to the appropriate dashboard
-      navigate(userRoute);
-    } else {
-      // Check if using the selected role instead
-      setRole(selectedRole);
-      
-      toast({
-        title: "Login successful",
-        description: `Logged in as ${selectedRole} using custom credentials`,
-      });
-      
-      // Navigate based on the selected role
-      if (selectedRole === "admin") {
-        navigate("/admin");
-      } else if (selectedRole === "affiliate") {
-        navigate("/affiliate");
+    try {
+      // Check if the email matches one of our predefined users
+      if (Object.keys(predefinedUsers).includes(email)) {
+        // Set the role based on the email
+        const userInfo = predefinedUsers[email as keyof typeof predefinedUsers];
+        const userRole = userInfo.role as "user" | "admin" | "affiliate";
+        const userRoute = userInfo.route;
+        
+        setRole(userRole);
+        
+        toast({
+          title: "Login successful",
+          description: `Logged in as ${userRole}`,
+        });
+        
+        // Navigate to the appropriate dashboard
+        navigate(userRoute);
       } else {
-        navigate("/dashboard");
+        toast({
+          title: "Login failed",
+          description: "Invalid credentials. Try user@example.com, admin@example.com, or affiliate@example.com",
+          variant: "destructive"
+        });
       }
+    } catch (error) {
+      toast({
+        title: "Login error",
+        description: "An error occurred while logging in",
+        variant: "destructive"
+      });
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,13 +72,12 @@ const LoginPage = () => {
       </div>
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <img
-            src="/lovable-uploads/332ae568-86d8-4c46-ac45-7a8c67c76215.png"
-            alt="Professional AI Assistants"
-            className="h-16"
-          />
-        </div>
+        <Link to="/" className="flex items-center font-bold text-[24px] text-[#1A237E] mb-3 md:mb-0 justify-center">
+                      <img src="/lovable-uploads/img/logo/updatedlogo1.png" 
+                        alt="Professional AI Assistants" 
+                        className="h-10 mr-3 " style={{ width: 'auto', height: '3.5rem' }}
+                      />
+                    </Link>
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-foreground">
           Log in to your Account
         </h2>
@@ -136,29 +135,6 @@ const LoginPage = () => {
               </div>
             </div>
 
-            {/* Role selection for testing */}
-            <div className="border-t border-gray-200 pt-4">
-              <Label className="mb-3 block">Or login as (custom credentials):</Label>
-              <RadioGroup 
-                value={selectedRole} 
-                onValueChange={(val: "user" | "admin" | "affiliate") => setSelectedRole(val)}
-                className="flex flex-wrap space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="user" id="user" />
-                  <Label htmlFor="user">Regular User</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="admin" />
-                  <Label htmlFor="admin">Admin</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="affiliate" id="affiliate" />
-                  <Label htmlFor="affiliate">Affiliate</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Checkbox id="remember-me" />
@@ -172,7 +148,7 @@ const LoginPage = () => {
 
               <div className="text-sm">
                 <a
-                  href="#"
+                  href="/forgot-password"
                   className="font-medium text-[#00B8D4] hover:text-[#0097A7] dark:text-[#4DD0E1] dark:hover:text-[#80DEEA]"
                 >
                   Forgot your password?
@@ -184,8 +160,9 @@ const LoginPage = () => {
               <Button
                 type="submit"
                 className="w-full bg-[#1A237E] hover:bg-[#151B60] dark:bg-[#3F51B5] dark:hover:bg-[#303F9F] text-white font-bold py-2 px-4"
+                disabled={isLoading}
               >
-                LOG IN
+                {isLoading ? "LOGGING IN..." : "LOG IN"}
               </Button>
             </div>
           </form>
@@ -208,11 +185,11 @@ const LoginPage = () => {
         </div>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          <a href="#" className="hover:text-foreground">
+          <a href="/privacy-policy" className="hover:text-foreground">
             Privacy Policy
           </a>{" "}
           |{" "}
-          <a href="#" className="hover:text-foreground">
+          <a href="/terms-of-service" className="hover:text-foreground">
             Terms of Use
           </a>
         </div>

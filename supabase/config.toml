@@ -1,8 +1,5 @@
 
-project_id = "bejgpkdsmyuvxbqtivxh"
-
-[functions.stripe-webhook]
-verify_jwt = false
+project_id = "zpsnmojodjattkltjnbc"
 
 [functions.generate-sample-data]
 verify_jwt = true

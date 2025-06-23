@@ -14,9 +14,23 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  // Force dark mode class to apply properly
+  useEffect(() => {
+    if (mounted && theme) {
+      // Ensure the document has the correct class
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      console.log("Theme updated to:", theme);
+    }
+  }, [theme, mounted]);
+
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
+    console.log("Toggling theme to:", newTheme);
     toast(`${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} mode activated`);
   };
 

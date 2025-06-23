@@ -1,7 +1,7 @@
 import React from "react";
 
 const HomeBenefitsSection = () => (
-  <section id="benefits" className="benefits bg-[#F5F5F5] py-24">
+  <section id="benefits" className="benefits bg-[#F5F5F5] pt-24 pb-4">
     <div className="container max-w-[1200px] mx-auto px-5">
       <div className="benefits-container flex flex-wrap items-center justify-between">
         <div className="benefits-content flex-basis-48">
@@ -30,9 +30,9 @@ const HomeBenefitsSection = () => (
             </li>
           </ul>
         </div>
-        <div className="benefits-image flex-basis-48">
+        { /*<div className="benefits-image flex-basis-48">
           <img src="/api/placeholder/500/400" alt="Business Benefits of AI Receptionist" className="rounded-lg" />
-        </div>
+        </div> */}
       </div>
     </div>
   </section>

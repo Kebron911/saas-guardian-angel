@@ -1,92 +1,117 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
-interface SubscriptionState {
-  isSubscribed: boolean;
-  planType: string | null;
-  isCanceled: boolean;
-  currentPeriodEnd: string | null;
-  isLoading: boolean;
-  checkSubscription: () => Promise<void>;
+type SubscriptionTier = 'free' | 'starter' | 'professional' | 'enterprise';
+
+interface SubscriptionContextType {
+  tier: SubscriptionTier;
+  isActive: boolean;
+  expiresAt: Date | null;
+  features: string[];
+  upgrade: (newTier: SubscriptionTier) => Promise<void>;
+  cancel: () => Promise<void>;
 }
 
-interface SubscriptionProviderProps {
-  children: ReactNode;
-}
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-const SubscriptionContext = createContext<SubscriptionState | undefined>(undefined);
+export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const [tier, setTier] = useState<SubscriptionTier>('free');
+  const [isActive, setIsActive] = useState<boolean>(true);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  
+  // Features available based on subscription tier
+  const [features, setFeatures] = useState<string[]>([]);
 
-export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
-  const auth = useAuth();
-  const { toast } = useToast();
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [planType, setPlanType] = useState<string | null>(null);
-  const [isCanceled, setIsCanceled] = useState(false);
-  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const checkSubscription = async () => {
-    // Only check subscription if the user is authenticated
-    if (!auth.user?.id) {
-      setIsSubscribed(false);
-      setPlanType(null);
-      setIsCanceled(false);
-      setCurrentPeriodEnd(null);
-      setIsLoading(false);
-      return;
+  // Simulate loading subscription data when user changes
+  useEffect(() => {
+    if (user) {
+      // For demo purposes, we'll simulate a starter subscription
+      setTier('starter');
+      setIsActive(true);
+      
+      // Set expiration to 30 days from now
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + 30);
+      setExpiresAt(expDate);
+      
+      // Set features based on tier
+      setFeatures([
+        '24/7 AI Receptionist',
+        'Up to 500 minutes/month',
+        'Basic call analytics',
+        'Email notifications',
+      ]);
+    } else {
+      // Reset to free when not logged in
+      setTier('free');
+      setIsActive(true);
+      setExpiresAt(null);
+      setFeatures(['Limited AI Receptionist']);
     }
+  }, [user]);
 
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('check-subscription', {});
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      setIsSubscribed(data.active);
-      setPlanType(data.plan);
-      setIsCanceled(data.cancel_at_period_end);
-      setCurrentPeriodEnd(data.current_period_end);
-    } catch (error: any) {
-      console.error('Error checking subscription status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to verify subscription status',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  // Upgrade subscription tier
+  const upgrade = async (newTier: SubscriptionTier): Promise<void> => {
+    // This would make an API call to handle the upgrade
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setTier(newTier);
+        // Update features based on new tier
+        if (newTier === 'professional') {
+          setFeatures([
+            'Everything in Starter',
+            'Up to 1500 minutes/month',
+            'Advanced call routing',
+            'SMS notifications',
+            'Custom voice selection',
+          ]);
+        } else if (newTier === 'enterprise') {
+          setFeatures([
+            'Everything in Professional',
+            'Unlimited minutes',
+            'Premium voice options',
+            'API integration',
+            'Custom script development',
+            'Dedicated support',
+          ]);
+        }
+        resolve();
+      }, 1000);
+    });
   };
 
-  useEffect(() => {
-    checkSubscription();
-  }, [auth.user]);
-
-  const value = {
-    isSubscribed,
-    planType,
-    isCanceled,
-    currentPeriodEnd,
-    isLoading,
-    checkSubscription,
+  // Cancel subscription
+  const cancel = async (): Promise<void> => {
+    // This would make an API call to handle the cancellation
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setTier('free');
+        setFeatures(['Limited AI Receptionist']);
+        resolve();
+      }, 1000);
+    });
   };
 
   return (
-    <SubscriptionContext.Provider value={value}>
+    <SubscriptionContext.Provider value={{ 
+      tier, 
+      isActive, 
+      expiresAt, 
+      features, 
+      upgrade, 
+      cancel
+    }}>
       {children}
     </SubscriptionContext.Provider>
   );
-}
+};
 
-export function useSubscription() {
+export const useSubscription = () => {
   const context = useContext(SubscriptionContext);
   if (context === undefined) {
     throw new Error('useSubscription must be used within a SubscriptionProvider');
   }
   return context;
-}
+};

@@ -10,7 +10,7 @@ const HomeHeroSection = () => {
   }, []);
 
   return (
-    <section className="hero py-20 bg-gradient-to-br from-white to-[#E3F2FD]">
+    <section className="hero py-20 bg-gradient-to-br from-white to-[#E3F2FD] pb-1 pt-0">
       <div className="container max-w-[1200px] mx-auto px-5 flex flex-col md:flex-row items-center justify-between">
         <div className={`hero-content mb-10 md:mb-0 max-w-xl z-10 transition-all duration-1000 transform ${isVisible ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}`}>
           <h1 className="text-4xl md:text-5xl font-bold text-[#1A237E] mb-6">
@@ -22,7 +22,7 @@ const HomeHeroSection = () => {
           <ROICalculator />
           <div className="hero-cta flex flex-wrap items-center gap-6 mt-8">
             <a 
-              href="#" 
+              href="/order" 
               className="hero-btn bg-[#1A237E] text-white px-6 py-3 rounded font-bold transition-all transform hover:bg-[#141c64] hover:scale-105 text-lg"
             >
               Start Your 14-Day Trial
@@ -40,11 +40,14 @@ const HomeHeroSection = () => {
           </div>
         </div>
         <div className={`hero-image w-full md:w-1/2 transition-all duration-1000 transform ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}`}>
-          <img 
-            src="/lovable-uploads/332ae568-86d8-4c46-ac45-7a8c67c76215.png" 
+          <img
+            src="/lovable-uploads/img/Homepage1.png" 
             alt="AI Phone Receptionist in Action" 
-            className="w-full rounded-lg shadow-2xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all duration-500"
-          />
+            className="w-full rounded-lg " //hover:shadow-2xl transition-all duration-500 --removed
+            /*className="w-full rounded-lg shadow-2xl hover:shadow-[0_20px_5s0px_rgba(0,0,0,0.2)] transition-all duration-500"
+            */
+            />
+         
         </div>
       </div>
     </section>

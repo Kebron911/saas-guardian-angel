@@ -1,6 +1,5 @@
-
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { DatabaseInterface } from '@/database_interface';
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,43 +7,42 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    id: "basic",
-    name: "Basic",
-    price: "$9.99/mo",
+    id: "starter",
+    name: "Starter",
+    price: "$299/mo",
     description: "Perfect for small businesses.",
     features: [
-      "Up to 100 calls per month",
-      "8AM-5PM reception hours",
-      "Basic voicemail transcription",
+      "24/7 AI Receptionist",
+      "Up to 500 minutes/month",
+      "Basic call analytics",
       "Email notifications"
     ]
   },
   {
-    id: "pro",
+    id: "professional",
     name: "Professional",
-    price: "$29.99/mo",
+    price: "$599/mo",
     description: "For growing businesses.",
     features: [
-      "Up to 500 calls per month",
-      "24/7 reception coverage",
-      "Full call transcription",
-      "SMS & email notifications",
-      "Custom business hours"
+      "Everything in Starter",
+      "Up to 1500 minutes/month",
+      "Advanced call routing",
+      "SMS notifications",
+      "Custom voice selection"
     ]
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    price: "Contact Us",
-    description: "For large organizations.",
+    price: "$1,299/mo",
+    description: "For organizations with complex needs.",
     features: [
-      "Unlimited calls",
-      "24/7 premium coverage",
-      "Full call transcription",
-      "Priority support",
-      "Custom greetings",
-      "Advanced analytics",
-      "Dedicated account manager"
+      "Everything in Professional",
+      "Unlimited minutes",
+      "Premium voice options",
+      "API integration",
+      "Custom script development",
+      "Dedicated support"
     ]
   }
 ];
@@ -57,7 +55,6 @@ const PricingSection = () => {
 
   const handleSelectPlan = async (planId: string) => {
     if (!session?.user) {
-      // Not logged in, redirect to login page
       navigate("/login?redirect=pricing");
       return;
     }
@@ -65,7 +62,6 @@ const PricingSection = () => {
     try {
       setIsLoading(planId);
       
-      // For enterprise plan, show contact message
       if (planId === "enterprise") {
         toast({
           title: "Enterprise Plan",
@@ -75,16 +71,17 @@ const PricingSection = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { plan: planId },
+      // Create checkout session
+      const checkoutData = await DatabaseInterface.insert('checkout_sessions', {
+        user_id: session.user.id,
+        plan: planId
       });
 
-      if (error) {
-        throw new Error(error.message);
+      if (checkoutData?.url) {
+        window.location.href = checkoutData.url;
+      } else {
+        throw new Error("Failed to create checkout session");
       }
-
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
     } catch (error: any) {
       console.error("Error creating checkout session:", error);
       toast({
@@ -100,7 +97,7 @@ const PricingSection = () => {
   return (
     <section id="pricing" className="py-16 bg-gradient-to-b from-white via-purple-50 to-white">
       <div className="max-w-5xl mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">Pricing</h2>
+        <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">Get Started with Professional AI Assistants</h2>
         <div className="flex flex-col md:flex-row gap-7 justify-center">
           {plans.map((plan, idx) => (
             <div 
@@ -129,8 +126,8 @@ const PricingSection = () => {
                 {isLoading === plan.id 
                   ? "Processing..." 
                   : plan.name === "Enterprise" 
-                    ? "Contact Sales" 
-                    : "Choose Plan"}
+                    ? "Select Enterprise" 
+                    : `Select ${plan.name}`}
               </Button>
             </div>
           ))}

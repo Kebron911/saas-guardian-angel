@@ -1,269 +1,315 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useToast } from "@/hooks/use-toast";
+import PageHeader from "@/components/PageHeader";
+import { CheckIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const OrderForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [plan, setPlan] = useState<string>("starter");
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("starter");
+  
   const [formData, setFormData] = useState({
+    businessName: "",
+    industry: "",
+    plan: "starter",
     firstName: "",
     lastName: "",
     email: "",
-    company: "",
     phone: "",
-    agree: false
   });
 
+  const plans = [
+    {
+      id: "starter",
+      name: "Starter",
+      price: "$299",
+      description: "Perfect for small businesses.",
+      features: [
+        "24/7 AI Receptionist",
+        "Up to 500 minutes/month",
+        "Basic call analytics",
+        "Email notifications"
+      ]
+    },
+    {
+      id: "professional",
+      name: "Professional",
+      price: "$599",
+      description: "For growing businesses.",
+      features: [
+        "Everything in Starter",
+        "Up to 1500 minutes/month",
+        "Advanced call routing",
+        "SMS notifications",
+        "Custom voice selection"
+      ]
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      price: "$1,299",
+      description: "For organizations with complex needs.",
+      features: [
+        "Everything in Professional",
+        "Unlimited minutes",
+        "Premium voice options",
+        "API integration",
+        "Custom script development",
+        "Dedicated support"
+      ]
+    }
+  ];
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlan(planId);
+    setFormData(prev => ({ ...prev, plan: planId }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Insert order into Supabase
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([
+          {
+            user_id: user?.id, // Add user_id if user is logged in
+            business_name: formData.businessName,
+            industry: formData.industry,
+            plan: formData.plan,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            email: formData.email,
+            phone: formData.phone
+          }
+        ]);
 
-    if (!formData.agree) {
+      if (error) {
+        throw error;
+      }
+
       toast({
-        title: "Error",
-        description: "Please agree to the terms and conditions",
-        variant: "destructive"
+        title: "Order Submitted Successfully",
+        description: "We'll contact you shortly to complete your setup.",
       });
-      return;
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Error Submitting Order",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Simulate successful order
-    toast({
-      title: "Order Successful",
-      description: "Thank you for your order! We'll be in touch shortly.",
-    });
-
-    // Navigate to login after a short delay
-    setTimeout(() => {
-      navigate("/login");
-    }, 2000);
   };
-
+  
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <PageHeader />
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-6xl">
-        <div className="flex justify-center mb-6">
-          <img
-            src="/lovable-uploads/332ae568-86d8-4c46-ac45-7a8c67c76215.png"
-            alt="Professional AI Assistants"
-            className="h-16"
-          />
-        </div>
-        
-        <h1 className="text-3xl font-extrabold text-center mb-8 text-foreground">
-          Get Started with Professional AI Assistants
-        </h1>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Pricing Cards with RadioGroup Wrapper */}
-          <RadioGroup value={plan} onValueChange={setPlan} className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:col-span-3">
-            <Card className={`border-2 ${plan === "starter" ? "border-[#00B8D4]" : "border-border"} h-full`}>
-              <CardHeader>
-                <CardTitle>Starter</CardTitle>
-                <CardDescription>Perfect for small businesses</CardDescription>
-                <div className="mt-4 text-3xl font-bold">$299<span className="text-lg font-normal">/month</span></div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> 24/7 AI Receptionist</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Up to 500 minutes/month</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Basic call analytics</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Email notifications</li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <div className="flex items-center">
-                  <RadioGroupItem id="starter" value="starter" className="mr-2" />
-                  <Label htmlFor="starter">Select Starter</Label>
-                </div>
-              </CardFooter>
-            </Card>
-
-            <Card className={`border-2 ${plan === "professional" ? "border-[#00B8D4]" : "border-border"} h-full`}>
-              <CardHeader>
-                <div className="px-3 py-1 text-xs bg-[#00B8D4] text-white rounded-full mb-2 inline-block">POPULAR</div>
-                <CardTitle>Professional</CardTitle>
-                <CardDescription>For growing businesses</CardDescription>
-                <div className="mt-4 text-3xl font-bold">$599<span className="text-lg font-normal">/month</span></div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Everything in Starter</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Up to 1500 minutes/month</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Advanced call routing</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> SMS notifications</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Custom voice selection</li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <div className="flex items-center">
-                  <RadioGroupItem id="professional" value="professional" className="mr-2" />
-                  <Label htmlFor="professional">Select Professional</Label>
-                </div>
-              </CardFooter>
-            </Card>
-
-            <Card className={`border-2 ${plan === "enterprise" ? "border-[#00B8D4]" : "border-border"} h-full`}>
-              <CardHeader>
-                <CardTitle>Enterprise</CardTitle>
-                <CardDescription>For organizations with complex needs</CardDescription>
-                <div className="mt-4 text-3xl font-bold">$1,299<span className="text-lg font-normal">/month</span></div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Everything in Professional</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Unlimited minutes</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Premium voice options</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> API integration</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Custom script development</li>
-                  <li className="flex items-center"><span className="mr-2 text-green-500">✓</span> Dedicated support</li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <div className="flex items-center">
-                  <RadioGroupItem id="enterprise" value="enterprise" className="mr-2" />
-                  <Label htmlFor="enterprise">Select Enterprise</Label>
-                </div>
-              </CardFooter>
-            </Card>
-          </RadioGroup>
-        </div>
-
-        {/* Order Form */}
-        <Card className="mt-10">
-          <CardHeader>
-            <CardTitle>Complete Your Order</CardTitle>
-            <CardDescription>Please fill in your details to get started</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input 
-                    id="firstName" 
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input 
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input 
-                    id="email"
-                    name="email" 
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input 
-                    id="phone"
-                    name="phone" 
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="company">Company Name</Label>
-                  <Input 
-                    id="company"
-                    name="company" 
-                    value={formData.company}
-                    onChange={handleChange}
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Selected Plan</Label>
-                  <Select value={plan} onValueChange={setPlan}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select a plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="starter">Starter - $299/month</SelectItem>
-                      <SelectItem value="professional">Professional - $599/month</SelectItem>
-                      <SelectItem value="enterprise">Enterprise - $1,299/month</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={formData.agree} 
-                  onCheckedChange={(checked) => setFormData({...formData, agree: checked === true})}
-                />
-                <label 
-                  htmlFor="terms" 
-                  className="text-sm text-muted-foreground"
-                >
-                  I agree to the <a href="#" className="text-[#00B8D4] hover:underline">Terms of Service</a> and <a href="#" className="text-[#00B8D4] hover:underline">Privacy Policy</a>
-                </label>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-[#1A237E] hover:bg-[#151B60] text-white font-bold py-3"
-              >
-                Complete Your Order
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-        
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Need help? <a href="#" className="text-[#00B8D4] hover:underline">Contact our sales team</a> or call us at (555) 123-4567
+      <main className="pt-[140px] pb-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            Get Your AI Receptionist
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 text-center mb-10">
+            Select your plan and complete the form below to get started with your AI receptionist solution.
           </p>
+          
+          {/* Pricing Section */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-center mb-8">Get Started with Professional AI Assistants</h2>
+            <div className="flex flex-col md:flex-row gap-6 justify-center">
+              {plans.map((plan) => (
+                <div 
+                  key={plan.id} 
+                  className={`flex-1 bg-white dark:bg-gray-800 border rounded-lg shadow-md p-6 flex flex-col mb-4 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${
+                    selectedPlan === plan.id
+                      ? "border-[#00B8D4] ring-2 ring-[#00B8D4]/30 dark:ring-[#00B8D4]/50"
+                      : "border-gray-200 dark:border-gray-700"
+                  } ${
+                    plan.id === "professional" 
+                      ? "relative overflow-hidden"
+                      : ""
+                  }`}
+                >
+                  {plan.id === "professional" && (
+                    <div className="absolute -right-8 top-5 bg-purple-600 text-white text-xs py-1 px-8 transform rotate-45 font-bold">
+                      POPULAR
+                    </div>
+                  )}
+                  <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{plan.description}</p>
+                  <div className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">{plan.price}<span className="text-base font-normal text-gray-500 dark:text-gray-400">/month</span></div>
+                  <ul className="mb-6 space-y-2 flex-grow">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="text-sm flex items-start">
+                        <CheckIcon className="h-4 w-4 mr-2 mt-0.5 text-green-500" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={() => handlePlanSelect(plan.id)}
+                    className={`w-full transition-all ${
+                      selectedPlan === plan.id 
+                        ? "bg-[#00B8D4] hover:bg-[#009cb8]" 
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {selectedPlan === plan.id ? "Selected" : `Select ${plan.name}`}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Complete Your Order</CardTitle>
+              <CardDescription>Fill out your information to complete your order</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit}>
+                <div className="space-y-6">
+                  {/* Business Information */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Business Information</h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Label htmlFor="businessName">Business Name</Label>
+                          <Input 
+                            id="businessName"
+                            name="businessName"
+                            value={formData.businessName}
+                            onChange={handleChange}
+                            placeholder="Your Business Name"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="industry">Industry</Label>
+                        <Select 
+                          value={formData.industry} 
+                          onValueChange={(value) => handleSelectChange("industry", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Industry" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="healthcare">Healthcare</SelectItem>
+                            <SelectItem value="retail">Retail</SelectItem>
+                            <SelectItem value="professional">Professional Services</SelectItem>
+                            <SelectItem value="hospitality">Hospitality</SelectItem>
+                            <SelectItem value="education">Education</SelectItem>
+                            <SelectItem value="technology">Technology</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Contact Information */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="firstName">First Name</Label>
+                          <Input 
+                            id="firstName"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            placeholder="First Name"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lastName">Last Name</Label>
+                          <Input 
+                            id="lastName"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            placeholder="Last Name"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="email">Email Address</Label>
+                          <Input 
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="your@email.com"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input 
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="(123) 456-7890"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-6 border-t dark:border-gray-700">
+                  <Button type="submit" className="w-full bg-[#00B8D4] hover:bg-[#009cb8]" disabled={isSubmitting}>
+                    {isSubmitting ? "Processing..." : `Complete Order (${formData.plan.charAt(0).toUpperCase() + formData.plan.slice(1)} Plan)`}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+            <CardFooter className="flex flex-col items-start text-sm text-gray-500 dark:text-gray-400">
+              <p>By submitting this form, you agree to our Terms of Service and Privacy Policy.</p>
+              <p className="mt-2">Need help? Contact our sales team at sales@example.com</p>
+            </CardFooter>
+          </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

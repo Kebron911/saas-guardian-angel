@@ -1,4 +1,6 @@
 
+import { Link } from "react-router-dom";
+
 const LandingFooter = () => (
   <footer className="bg-[#333] text-white py-16">
     <div className="container max-w-[1200px] mx-auto px-5">
@@ -15,6 +17,15 @@ const LandingFooter = () => (
             <li className="mb-2"><a href="#how-it-works" className="text-[#bbb] hover:text-white">How It Works</a></li>
             <li className="mb-2"><a href="#use-cases" className="text-[#bbb] hover:text-white">Use Cases</a></li>
             <li><a href="#faq" className="text-[#bbb] hover:text-white">FAQ</a></li>
+          </ul>
+        </div>
+        <div className="footer-column flex-basis-20 mb-8">
+          <h3 className="font-bold text-lg mb-4">Legal</h3>
+          <ul className="list-none">
+            <li className="mb-2"><Link to="/privacy-policy" className="text-[#bbb] hover:text-white">Privacy Policy</Link></li>
+            <li className="mb-2"><Link to="/terms-of-service" className="text-[#bbb] hover:text-white">Terms of Service</Link></li>
+            <li className="mb-2"><Link to="/cookie-policy" className="text-[#bbb] hover:text-white">Cookie Policy</Link></li>
+            <li><Link to="/gdpr-compliance" className="text-[#bbb] hover:text-white">GDPR Compliance</Link></li>
           </ul>
         </div>
         <div className="footer-column flex-basis-30 mb-8">

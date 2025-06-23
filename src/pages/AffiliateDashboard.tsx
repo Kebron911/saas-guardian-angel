@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   ArrowRight, 
@@ -44,6 +43,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+
+// Place this SVG inline or use an <img src="..."> if you have the X logo as a file
+const XLogo = () => (
+  <svg viewBox="0 0 250 255" width={16} height={16} className="h-4 w-4" fill="black" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0 L100 0 L125 40 L150 0 L250 0 L160 127.5 L250 255 L150 255 L125 215 L100 255 L0 255 L90 127.5 Z" stroke="black" strokeWidth="16" fill="none"/>
+  </svg>
+);
 
 const AffiliateDashboard = () => {
   const { toast } = useToast();
@@ -106,51 +112,134 @@ const AffiliateDashboard = () => {
         </Card>
 
         {/* Referral Link & Share Tools */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Referral Link</CardTitle>
-            <CardDescription>Share this unique link to start earning commissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center">
-                <Input 
-                  value={affiliateLink}
-                  readOnly
-                  className="flex-1 mr-2"
-                />
-                <Button onClick={copyToClipboard} className="flex items-center gap-1">
-                  <Copy className="h-4 w-4" /> Copy
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex justify-center items-center bg-gray-50 p-6 rounded-lg">
-                  <QrCode className="w-24 h-24 text-[#1A237E]" />
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Referral Link</CardTitle>
+              <CardDescription>Share this unique link to start earning commissions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center">
+            <Input 
+              value={affiliateLink}
+              readOnly
+              className="flex-1 mr-2"
+            />
+            <Button onClick={copyToClipboard} className="flex items-center gap-1">
+              <Copy className="h-4 w-4" /> Copy
+            </Button>
                 </div>
                 
-                <div className="flex flex-col space-y-3">
-                  <p className="text-sm font-medium text-gray-700">Share your link via:</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" /> WhatsApp
-                    </Button>
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <Twitter className="h-4 w-4" /> Twitter
-                    </Button>
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" /> Email
-                    </Button>
-                  </div>
-                  <Button className="mt-2 bg-[#1A237E] hover:bg-[#1A237E]/90">
-                    Start Earning Now
-                  </Button>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex justify-center items-center bg-gray-50 p-6 rounded-lg">
+              <div className="flex flex-col items-center">
+                <QrCode className="w-24 h-24 text-[#1A237E] mb-2" />
+                <p className="text-xs text-gray-500">QR Code for your link</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
+            
+            <div className="flex flex-col space-y-3">
+              <p className="text-sm font-medium text-gray-700">Share your link via:</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                `Check out this awesome service: ${affiliateLink}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+                  >
+              <MessageSquare className="h-4 w-4" /> WhatsApp
+                  </a>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                      `Check out this awesome service: ${affiliateLink}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <XLogo /> Twitter
+                  </a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(affiliateLink)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {/* You can use a Facebook SVG icon or image here */}
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="#1877F3"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24H12.82v-9.294H9.692V11.01h3.127V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.696h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/>
+                    </svg>
+                    Facebook
+                  </a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=&su=${encodeURIComponent("Check out this link!")}&body=${encodeURIComponent(affiliateLink)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {/* Gmail SVG icon */}
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 48 48"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect width="48" height="48" rx="8" fill="#fff"/>
+                      <path d="M6 14v20a4 4 0 004 4h28a4 4 0 004-4V14a4 4 0 00-4-4H10a4 4 0 00-4 4z" fill="#EA4335"/>
+                      <path d="M42 14l-18 13L6 14" fill="#fff"/>
+                      <path d="M6 14l18 13 18-13" stroke="#EA4335" strokeWidth="2"/>
+                      <path d="M6 34V14l18 13 18-13v20a4 4 0 01-4 4H10a4 4 0 01-4-4z" fill="#34A853"/>
+                      <path d="M6 34l12-9" stroke="#4285F4" strokeWidth="2"/>
+                      <path d="M42 34l-12-9" stroke="#FBBC05" strokeWidth="2"/>
+                    </svg>
+                    Gmail
+                  </a>
+                </Button>
+
+              </div>
+              <Button
+                disabled
+                className="mt-2 bg-[#1A237E] hover:bg-[#1A237E]/90"
+                style={{ backgroundColor: "#1A237E", color: "white", opacity: 1 }}
+              >
+                Start Earning Now
+              </Button>
+              
+            </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
         {/* How It Works */}
         <Card>
           <CardHeader>
@@ -380,7 +469,7 @@ const AffiliateDashboard = () => {
                 <span className="text-sm">Email Templates</span>
               </Button>
               <Button variant="outline" className="h-auto flex flex-col items-center py-4 px-2">
-                <Mail className="h-6 w-6 mb-2" />
+                <Download className="h-6 w-6 mb-2" />
                 <span className="text-sm">Videos</span>
               </Button>
               <Button variant="outline" className="h-auto flex flex-col items-center py-4 px-2">

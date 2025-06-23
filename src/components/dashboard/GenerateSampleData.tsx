@@ -1,56 +1,49 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Database } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export const GenerateSampleData = () => {
-  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
-
-  const handleGenerateSampleData = async () => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const handleGenerate = async () => {
     try {
       setIsGenerating(true);
       
-      // Add user_id to the payload
-      const { data, error } = await supabase.functions.invoke('generate-sample-data', {
-        body: { user_id: user?.id }
-      });
-
+      const { data, error } = await supabase.functions.invoke('generate-sample-data');
+      
       if (error) {
-        throw new Error(error.message);
+        throw error;
       }
-
+      
       toast({
-        title: "Success",
-        description: "Sample data generated successfully!",
+        title: "Sample Data Generated",
+        description: "New sample data has been loaded for demonstration."
       });
-
-      // Reload the page to refresh the data
-      window.location.reload();
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error generating sample data:", error);
       toast({
         title: "Error",
-        description: `Failed to generate sample data: ${error.message}`,
+        description: "Failed to generate sample data. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
   };
-
+  
   return (
     <Button 
-      onClick={handleGenerateSampleData}
+      variant="outline" 
+      onClick={handleGenerate}
+      className="flex items-center"
       disabled={isGenerating}
-      variant="outline"
-      className="flex items-center gap-2"
     >
-      <Database className="h-4 w-4" />
-      {isGenerating ? "Generating..." : "Generate Sample Data"}
+      <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+      {isGenerating ? 'Generating...' : 'Generate Sample Data'}
     </Button>
   );
 };

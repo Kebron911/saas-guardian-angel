@@ -1,6 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CalculatorProvider } from "@/contexts/CalculatorContext";
+import CalculatorForm from "@/components/calculator/CalculatorForm";
+import ResultsSection1 from "@/components/calculator/ResultsSection1";
+import BeforeAfterSnapshot from "@/components/calculator/BeforeAfterSnapshot";
+import IndustrySelector from "@/components/calculator/IndustrySelector";
 import {
   Dialog,
   DialogContent,
@@ -13,70 +17,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const ROICalculator = () => {
-  const [calls, setCalls] = useState<number>(100);
-  const [hours, setHours] = useState<number>(40);
-  const [hourlyWage, setHourlyWage] = useState<number>(15);
-
-  const calculateSavings = () => {
-    const currentCost = (hours * hourlyWage * 52); // yearly cost
-    const aiCost = (0.47 * hours * 52); // AI cost per year
-    return (currentCost - aiCost).toFixed(2);
-  };
-
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="lg"
           className="bg-white text-[#1A237E] hover:bg-[#E3F2FD] border-2 border-[#1A237E] font-bold text-lg px-6 py-3 rounded transition-all transform hover:scale-105"
         >
           How Much Could You Save? →
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Calculate Your ROI</DialogTitle>
           <DialogDescription>
-            See how much you could save by switching to our AI receptionist.
+            <span className="font-bold text-lg text-[#1A237E]">
+              See how much you could save by switching to our AI receptionist.
+            </span>
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="calls">Average Calls per Week</Label>
-            <Input
-              id="calls"
-              type="number"
-              value={calls}
-              onChange={(e) => setCalls(Number(e.target.value))}
-              min={0}
-            />
+        <CalculatorProvider>
+          <div className="max-w-4xl mx-auto">
+          <IndustrySelector />
+          <BeforeAfterSnapshot />
+            <CalculatorForm />
+            <ResultsSection1 />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="hours">Reception Hours per Week</Label>
-            <Input
-              id="hours"
-              type="number"
-              value={hours}
-              onChange={(e) => setHours(Number(e.target.value))}
-              min={0}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="wage">Current Hourly Wage ($)</Label>
-            <Input
-              id="wage"
-              type="number"
-              value={hourlyWage}
-              onChange={(e) => setHourlyWage(Number(e.target.value))}
-              min={0}
-            />
-          </div>
-          <div className="mt-4 p-4 bg-[#E3F2FD] rounded-lg">
-            <h3 className="text-lg font-bold text-[#1A237E] mb-2">Estimated Yearly Savings</h3>
-            <p className="text-2xl font-bold text-[#00B8D4]">${calculateSavings()}</p>
-          </div>
-        </div>
+        </CalculatorProvider>
       </DialogContent>
     </Dialog>
   );

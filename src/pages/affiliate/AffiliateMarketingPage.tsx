@@ -1,4 +1,3 @@
-
 import React from "react";
 import AffiliateLayout from "@/components/affiliate/AffiliateLayout";
 import {
@@ -29,9 +28,9 @@ interface MarketingAssetProps {
 }
 
 const marketingAssets: MarketingAssetProps[] = [
-  { name: "Homepage Banner", type: "PNG", size: "1200x628px", downloads: 124, previewUrl: "https://placehold.co/600x200" },
-  { name: "Profile Banner", type: "PNG", size: "800x600px", downloads: 98, previewUrl: "https://placehold.co/600x200" },
-  { name: "Email Header", type: "JPG", size: "600x200px", downloads: 76, previewUrl: "https://placehold.co/600x200" },
+  { name: "Homepage Banner", type: "PNG", size: "1200x628px", downloads: 124, previewUrl: "/lovable-uploads/img/MarketingAssets/Homepagebanner.png" },
+  { name: "Profile Banner", type: "PNG", size: "800x600px", downloads: 98, previewUrl: "/lovable-uploads/img/MarketingAssets/ProfileBanner.png" },
+  { name: "Email Header", type: "JPG", size: "600x200px", downloads: 76, previewUrl: "/lovable-uploads/img/MarketingAssets/EmailHeader.png" },
   { name: "Sidebar Ad", type: "PNG", size: "300x600px", downloads: 52, previewUrl: "https://placehold.co/300x600" },
   { name: "Mobile Banner", type: "PNG", size: "320x100px", downloads: 47, previewUrl: "https://placehold.co/320x100" },
   { name: "Square Social", type: "PNG", size: "1080x1080px", downloads: 118, previewUrl: "https://placehold.co/600x600" },
@@ -56,6 +55,15 @@ const socialCaptions = [
   { name: "Testimonials", platform: "All", downloads: 76 },
 ];
 
+const downloadImage = (url: string, filename: string) => {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 const AssetCard = ({ asset }: { asset: MarketingAssetProps }) => (
   <Card className="overflow-hidden">
     <img 
@@ -69,7 +77,11 @@ const AssetCard = ({ asset }: { asset: MarketingAssetProps }) => (
         <span>{asset.type} • {asset.size}</span>
         <span>{asset.downloads} downloads</span>
       </div>
-      <Button size="sm" className="w-full flex items-center justify-center gap-1">
+      <Button
+        size="sm"
+        className="w-full flex items-center justify-center gap-1"
+        onClick={() => downloadImage(asset.previewUrl, `${asset.name.replace(/\s+/g, "_").toLowerCase()}.${asset.type.toLowerCase()}`)}
+      >
         <Download className="h-4 w-4" /> Download
       </Button>
     </CardContent>

@@ -2,89 +2,107 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Sample heatmap data (simplified representation)
-const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const hoursOfDay = Array.from({ length: 12 }, (_, i) => i + 8); // 8am - 7pm
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17];
 
-const generateHeatmapData = () => {
-  const data = [];
+export const CallVolumeHeatmap = () => {
+  // Generate mock data for the heatmap
+  const generateHeatmapData = () => {
+    const data = [];
+    for (let day of days) {
+      for (let hour of hours) {
+        // More calls during business hours on weekdays
+        let baseVolume = 0;
+        
+        // Weekdays have higher volume
+        if (["Mon", "Tue", "Wed", "Thu", "Fri"].includes(day)) {
+          baseVolume = 5;
+        } else {
+          baseVolume = 2;
+        }
+        
+        // Mid-day hours have higher volume
+        if (hour >= 11 && hour <= 15) {
+          baseVolume += 3;
+        }
+        
+        // Add some randomness
+        const volume = baseVolume + Math.floor(Math.random() * 5);
+        
+        data.push({
+          day,
+          hour: `${hour}:00`,
+          volume
+        });
+      }
+    }
+    return data;
+  };
   
-  daysOfWeek.forEach(day => {
-    hoursOfDay.forEach(hour => {
-      data.push({
-        day,
-        hour: `${hour}:00`,
-        value: Math.floor(Math.random() * 10)
-      });
-    });
-  });
+  const heatmapData = generateHeatmapData();
   
-  return data;
-};
-
-const heatmapData = generateHeatmapData();
-
-export function CallVolumeHeatmap() {
+  // Function to determine the color intensity based on call volume
+  const getColorIntensity = (volume: number) => {
+    const maxVolume = 13; // Based on our generated data
+    const intensity = Math.min(0.9, Math.max(0.1, volume / maxVolume));
+    
+    // For dark mode compatibility, use HSL with lightness that works in both themes
+    return {
+      backgroundColor: `hsla(231, 48%, 30%, ${intensity})`,
+      color: intensity > 0.5 ? "white" : "inherit"
+    };
+  };
+  
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Call Volume Heatmap</CardTitle>
-          <div className="flex gap-2">
-            <div className="flex items-center">
-              <span className="block w-3 h-3 rounded-full bg-green-200 mr-1"></span>
-              <span className="text-xs text-gray-500">Low</span>
-            </div>
-            <div className="flex items-center">
-              <span className="block w-3 h-3 rounded-full bg-green-500 mr-1"></span>
-              <span className="text-xs text-gray-500">Medium</span>
-            </div>
-            <div className="flex items-center">
-              <span className="block w-3 h-3 rounded-full bg-green-700 mr-1"></span>
-              <span className="text-xs text-gray-500">High</span>
-            </div>
-          </div>
-        </div>
+        <CardTitle className="text-lg">Call Volume Heatmap</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-xs text-center mb-2">Hour of Day (8AM - 7PM)</div>
-        <div className="grid grid-cols-12 gap-1">
-          {/* Hours header */}
-          {hoursOfDay.map((hour) => (
-            <div key={hour} className="h-6 flex items-center justify-center text-xs text-gray-500">
-              {hour}
+        <div className="h-[300px] overflow-auto">
+          <div className="grid grid-cols-[auto_repeat(7,1fr)] gap-[2px]">
+            {/* Hours column */}
+            <div className="sticky left-0 bg-white dark:bg-gray-800 z-10">
+              <div className="h-8"></div> {/* Empty cell for corner */}
+              {hours.map(hour => (
+                <div
+                  key={hour}
+                  className="h-8 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400"
+                >
+                  {hour}:00
+                </div>
+              ))}
             </div>
-          ))}
-          
-          {/* Day rows */}
-          {daysOfWeek.map((day) => (
-            <React.Fragment key={day}>
-              <div className="col-span-12 text-left text-xs text-gray-500 mt-1">{day}</div>
-              {hoursOfDay.map((hour) => {
-                const cellData = heatmapData.find(d => d.day === day && d.hour === `${hour}:00`);
-                const value = cellData ? cellData.value : 0;
-                let bgColor = 'bg-green-100';
-                if (value > 6) bgColor = 'bg-green-700';
-                else if (value > 3) bgColor = 'bg-green-500';
-                else if (value > 0) bgColor = 'bg-green-200';
+            
+            {/* Days and data cells */}
+            {days.map((day, dayIndex) => (
+              <div key={day}>
+                {/* Day header */}
+                <div className="h-8 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {day}
+                </div>
                 
-                return (
-                  <div 
-                    key={`${day}-${hour}`} 
-                    className={`h-6 ${bgColor} rounded-sm flex items-center justify-center`} 
-                    title={`${day}, ${hour}:00 - ${value} calls`}
-                  >
-                    <span className="text-xs text-white font-medium">{value > 0 ? value : ''}</span>
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="text-xs text-gray-500 mt-2 text-center">
-          Tuesday, 2PM is your busiest time with an average of 9 calls
+                {/* Hour cells for this day */}
+                {hours.map((hour, hourIndex) => {
+                  const cellData = heatmapData.find(d => d.day === day && d.hour === `${hour}:00`);
+                  const volume = cellData ? cellData.volume : 0;
+                  const cellStyle = getColorIntensity(volume);
+                  
+                  return (
+                    <div
+                      key={`${day}-${hour}`}
+                      className="h-8 flex items-center justify-center text-xs rounded-sm"
+                      style={cellStyle}
+                    >
+                      {volume}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
-}
+};
