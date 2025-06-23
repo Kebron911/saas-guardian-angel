@@ -1,1 +1,5 @@
-# Empty file to mark directory as Python package
+
+# Metrics module initialization
+from .router import router
+
+__all__ = ['router']

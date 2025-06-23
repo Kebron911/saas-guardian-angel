@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BlogPost, BlogPostWithCategory } from "@/types/blog";
+import { BlogPost, BlogPostWithCategory, BlogCategory } from "@/types/blog";
 
 export const useBlogPageData = () => {
   const [posts, setPosts] = useState<BlogPostWithCategory[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +28,14 @@ export const useBlogPageData = () => {
 
       if (postsError) throw postsError;
 
+      // Get categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from("blog_categories")
+        .select("*")
+        .order("name");
+
+      if (categoriesError) throw categoriesError;
+
       // Transform the data to match our BlogPostWithCategory interface
       const transformedPosts: BlogPostWithCategory[] = postsData.map((post) => ({
         ...post,
@@ -35,6 +44,7 @@ export const useBlogPageData = () => {
       }));
 
       setPosts(transformedPosts);
+      setCategories(categoriesData || []);
     } catch (err: any) {
       console.error("Error fetching blog posts:", err);
       setError(err.message);
@@ -88,10 +98,62 @@ export const useBlogPageData = () => {
 
   return {
     posts,
+    categories,
     isLoading,
     error,
     fetchPosts,
     fetchPostBySlug,
     incrementViews
   };
+};
+
+export const useSingleBlogPost = (slug?: string) => {
+  const [post, setPost] = useState<BlogPostWithCategory | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slug) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchPost = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const { data: postData, error: postError } = await supabase
+          .from("blog_posts")
+          .select(`
+            *,
+            blog_post_categories(
+              blog_categories(*)
+            )
+          `)
+          .eq("slug", slug)
+          .eq("published", true)
+          .single();
+
+        if (postError) throw postError;
+
+        const transformedPost: BlogPostWithCategory = {
+          ...postData,
+          views: 0,
+          categories: postData.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
+        };
+
+        setPost(transformedPost);
+      } catch (err: any) {
+        console.error("Error fetching blog post:", err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [slug]);
+
+  return { post, isLoading, error };
 };

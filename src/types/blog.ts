@@ -24,3 +24,20 @@ export interface BlogCategory {
 export interface BlogPostWithCategory extends BlogPost {
   categories: BlogCategory[];
 }
+
+// Input types for creating/updating blog posts and categories
+export interface BlogPostInput {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  author_id?: string;
+  published?: boolean;
+  published_at?: string;
+  featured_image?: string;
+}
+
+export interface BlogCategoryInput {
+  name: string;
+  slug: string;
+}
