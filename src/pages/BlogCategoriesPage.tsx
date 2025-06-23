@@ -64,7 +64,13 @@ const BlogCategoriesPage = () => {
         
         if (postsError) throw postsError;
         
-        setPosts(postsData);
+        // Transform posts to include default views
+        const transformedPosts: BlogPost[] = postsData.map(post => ({
+          ...post,
+          views: 0 // Default views since it doesn't exist in database
+        }));
+        
+        setPosts(transformedPosts);
         
       } catch (err: any) {
         console.error("Error fetching category data:", err);

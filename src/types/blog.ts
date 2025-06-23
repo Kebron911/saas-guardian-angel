@@ -2,16 +2,16 @@
 export interface BlogPost {
   id: string;
   title: string;
+  slug: string;
   content: string;
   excerpt?: string;
-  slug: string;
+  author_id?: string;
   published: boolean;
   published_at?: string;
-  views: number;
   created_at: string;
   updated_at: string;
   featured_image?: string;
-  category?: BlogCategory;
+  views?: number; // Make views optional since it doesn't exist in the database
 }
 
 export interface BlogCategory {
@@ -23,21 +23,4 @@ export interface BlogCategory {
 
 export interface BlogPostWithCategory extends BlogPost {
   categories: BlogCategory[];
-}
-
-// Add this new type for creating/updating blog posts
-export interface BlogPostInput {
-  title: string;
-  content: string;
-  excerpt?: string;
-  slug: string;
-  published: boolean;
-  published_at?: string;
-  featured_image?: string;
-}
-
-// Add this new type for creating/updating blog categories
-export interface BlogCategoryInput {
-  name: string;
-  slug: string;
 }
