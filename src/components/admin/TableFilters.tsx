@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon, Filter, SortAsc, SortDesc, Search, X } from "lucide-react";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 interface FilterOption {
   value: string;
@@ -46,8 +47,8 @@ interface TableFiltersProps {
   dateRange?: {
     from: Date | undefined;
     to: Date | undefined;
-    onChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
   };
+  onDateRangeChange?: (range: { from: Date | undefined; to: Date | undefined }) => void;
   onClearFilters?: () => void;
   searchPlaceholder?: string;
 }
@@ -62,6 +63,7 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
   sortOptions = [],
   filters = [],
   dateRange,
+  onDateRangeChange,
   onClearFilters,
   searchPlaceholder = "Search..."
 }) => {
@@ -125,7 +127,7 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
       ))}
 
       {/* Date Range */}
-      {dateRange && (
+      {dateRange && onDateRangeChange && (
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
@@ -148,8 +150,10 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
               initialFocus
               mode="range"
               defaultMonth={dateRange.from}
-              selected={{ from: dateRange.from, to: dateRange.to }}
-              onSelect={(range) => dateRange.onChange(range || { from: undefined, to: undefined })}
+              selected={dateRange as DateRange}
+              onSelect={(range: DateRange | undefined) => 
+                onDateRangeChange(range || { from: undefined, to: undefined })
+              }
               numberOfMonths={2}
             />
           </PopoverContent>

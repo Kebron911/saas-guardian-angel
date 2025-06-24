@@ -104,6 +104,7 @@ export const RecentActivity = () => {
           sortOptions={sortOptions}
           filters={filters}
           dateRange={dateRange}
+          onDateRangeChange={setDateRange}
           onClearFilters={clearFilters}
           searchPlaceholder="Search activities, admins, IP addresses..."
         />

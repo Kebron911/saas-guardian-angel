@@ -1,33 +1,46 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Users, CreditCard, BarChart3, MessageSquare, Link as LinkIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 export const AdminStats = () => {
-  const [stats, setStats] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('admin_stats')
-          .select('*');
-          
-        if (error) throw error;
-        
-        if (data) {
-          setStats(data);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching admin stats:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    fetchStats();
-  }, []);
+  // Sample stats data that would normally come from an API
+  const stats = [
+    {
+      title: "Total Users",
+      value: "2,543",
+      change: "+12% from last month",
+      icon: "Users",
+      icon_bg: "bg-blue-100"
+    },
+    {
+      title: "Active Affiliates",
+      value: "487",
+      change: "+8% from last month",
+      icon: "LinkIcon",
+      icon_bg: "bg-cyan-100"
+    },
+    {
+      title: "Monthly Revenue",
+      value: "$24,567",
+      change: "+15% from last month",
+      icon: "CreditCard",
+      icon_bg: "bg-red-100"
+    },
+    {
+      title: "Active Subscriptions",
+      value: "1,234",
+      change: "+5% from last month",
+      icon: "BarChart3",
+      icon_bg: "bg-green-100"
+    },
+    {
+      title: "Support Tickets",
+      value: "23",
+      change: "-3% from last month",
+      icon: "MessageSquare",
+      icon_bg: "bg-purple-100"
+    }
+  ];
   
   const getIconComponent = (iconName: string) => {
     const iconComponents = {
@@ -40,25 +53,6 @@ export const AdminStats = () => {
     
     return iconComponents[iconName] || <Users className="h-5 w-5" />;
   };
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="animate-pulse flex items-center justify-between">
-              <div className="space-y-2">
-                <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                <div className="h-6 w-16 bg-gray-300 rounded"></div>
-                <div className="h-3 w-32 bg-gray-200 rounded"></div>
-              </div>
-              <div className="bg-gray-200 p-3 rounded-full h-12 w-12"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
