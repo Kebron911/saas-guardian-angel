@@ -1,61 +1,70 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BlogPost, BlogPostWithCategory, BlogCategory } from "@/types/blog";
+import { BlogPost, BlogCategory, BlogPostWithCategory } from "@/types/blog";
 
-export const useBlogPageData = () => {
+interface UseBlogPageDataResult {
+  posts: BlogPostWithCategory[];
+  post: BlogPostWithCategory | null;
+  categories: BlogCategory[];
+  isLoading: boolean;
+  error: string | null;
+  incrementViews: (postId: string) => Promise<void>;
+}
+
+export const useBlogPageData = (slug?: string): UseBlogPageDataResult => {
   const [posts, setPosts] = useState<BlogPostWithCategory[]>([]);
+  const [post, setPost] = useState<BlogPostWithCategory | null>(null);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPosts = async () => {
+  const fetchBlogPosts = async () => {
     try {
       setIsLoading(true);
-      setError(null);
-
-      // Get blog posts with categories
-      const { data: postsData, error: postsError } = await supabase
+      console.log("Fetching blog posts...");
+      
+      let query = supabase
         .from("blog_posts")
         .select(`
           *,
-          blog_post_categories(
+          blog_post_categories!inner(
             blog_categories(*)
           )
         `)
         .eq("published", true)
         .order("published_at", { ascending: false });
 
-      if (postsError) throw postsError;
+      const { data: posts, error } = await query;
 
-      // Get categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from("blog_categories")
-        .select("*")
-        .order("name");
+      if (error) {
+        console.error("Error fetching posts:", error);
+        throw error;
+      }
 
-      if (categoriesError) throw categoriesError;
+      console.log("Raw posts data:", posts);
 
-      // Transform the data to match our BlogPostWithCategory interface
-      const transformedPosts: BlogPostWithCategory[] = postsData.map((post) => ({
+      const processedPosts: BlogPostWithCategory[] = posts?.map((post: any) => ({
         ...post,
-        views: 0, // Default views to 0 since it doesn't exist in database
         categories: post.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
-      }));
+      })) || [];
 
-      setPosts(transformedPosts);
-      setCategories(categoriesData || []);
+      console.log("Processed posts:", processedPosts);
+      setPosts(processedPosts);
     } catch (err: any) {
-      console.error("Error fetching blog posts:", err);
+      console.error("Error in fetchBlogPosts:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchPostBySlug = async (slug: string): Promise<BlogPostWithCategory | null> => {
+  const fetchBlogPost = async (postSlug: string) => {
     try {
-      const { data: postData, error: postError } = await supabase
+      setIsLoading(true);
+      console.log("Fetching blog post with slug:", postSlug);
+      
+      const { data: post, error } = await supabase
         .from("blog_posts")
         .select(`
           *,
@@ -63,97 +72,109 @@ export const useBlogPageData = () => {
             blog_categories(*)
           )
         `)
-        .eq("slug", slug)
+        .eq("slug", postSlug)
         .eq("published", true)
         .single();
 
-      if (postError) throw postError;
+      if (error) {
+        console.error("Error fetching post:", error);
+        throw error;
+      }
 
-      // Transform the data
-      const transformedPost: BlogPostWithCategory = {
-        ...postData,
-        views: 0, // Default views to 0
-        categories: postData.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
+      console.log("Raw post data:", post);
+
+      const processedPost: BlogPostWithCategory = {
+        ...post,
+        categories: post.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
       };
 
-      return transformedPost;
+      console.log("Processed post:", processedPost);
+      setPost(processedPost);
     } catch (err: any) {
-      console.error("Error fetching blog post by slug:", err);
-      return null;
+      console.error("Error in fetchBlogPost:", err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const incrementViews = async (slug: string) => {
+  const fetchCategories = async () => {
     try {
-      // Since views column doesn't exist, we'll just log this for now
-      console.log(`Would increment views for post: ${slug}`);
+      const { data: categories, error } = await supabase
+        .from("blog_categories")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching categories:", error);
+        throw error;
+      }
+
+      console.log("Categories fetched:", categories);
+      setCategories(categories || []);
     } catch (err: any) {
-      console.error("Error incrementing views:", err);
+      console.error("Error in fetchCategories:", err);
+      setError(err.message);
+    }
+  };
+
+  const incrementViews = async (postId: string) => {
+    try {
+      // Get current views count first
+      const { data: currentPost, error: fetchError } = await supabase
+        .from("blog_posts")
+        .select("views")
+        .eq("id", postId)
+        .single();
+
+      if (fetchError) {
+        console.error("Error fetching current views:", fetchError);
+        return;
+      }
+
+      const currentViews = currentPost?.views || 0;
+      
+      const { error } = await supabase
+        .from("blog_posts")
+        .update({ views: currentViews + 1 })
+        .eq("id", postId);
+
+      if (error) {
+        console.error("Error incrementing views:", error);
+      }
+    } catch (err: any) {
+      console.error("Error in incrementViews:", err);
     }
   };
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    if (slug) {
+      fetchBlogPost(slug);
+    } else {
+      fetchBlogPosts();
+    }
+    fetchCategories();
+  }, [slug]);
 
   return {
     posts,
+    post,
     categories,
     isLoading,
     error,
-    fetchPosts,
-    fetchPostBySlug,
-    incrementViews
+    incrementViews,
   };
 };
 
+// Export the single post hook that BlogPostContent expects
 export const useSingleBlogPost = (slug?: string) => {
-  const [post, setPost] = useState<BlogPostWithCategory | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const { post, isLoading, error, incrementViews } = useBlogPageData(slug);
+  
   useEffect(() => {
-    if (!slug) {
-      setIsLoading(false);
-      return;
+    if (post && post.id) {
+      incrementViews(post.id);
     }
-
-    const fetchPost = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const { data: postData, error: postError } = await supabase
-          .from("blog_posts")
-          .select(`
-            *,
-            blog_post_categories(
-              blog_categories(*)
-            )
-          `)
-          .eq("slug", slug)
-          .eq("published", true)
-          .single();
-
-        if (postError) throw postError;
-
-        const transformedPost: BlogPostWithCategory = {
-          ...postData,
-          views: 0,
-          categories: postData.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
-        };
-
-        setPost(transformedPost);
-      } catch (err: any) {
-        console.error("Error fetching blog post:", err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPost();
-  }, [slug]);
-
+  }, [post, incrementViews]);
+  
   return { post, isLoading, error };
 };

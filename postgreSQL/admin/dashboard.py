@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException
 from postgreSQL.database import DatabaseInterface
 import logging
@@ -29,11 +28,11 @@ async def get_dashboard_stats():
         total_affiliates_result = DatabaseInterface.execute_query(total_affiliates_query)
         total_affiliates = total_affiliates_result[0]['count'] if total_affiliates_result else 0
 
-        # Active Subscriptions
+        # Active Subscriptions (use the view)
         active_subscriptions_query = """
             SELECT COUNT(*) as count 
-            FROM subscriptions 
-            WHERE status = 'active' AND deleted_at IS NULL
+            FROM active_subscriptions
+            WHERE status = 'active'
         """
         active_subscriptions_result = DatabaseInterface.execute_query(active_subscriptions_query)
         active_subscriptions = active_subscriptions_result[0]['count'] if active_subscriptions_result else 0
@@ -127,7 +126,7 @@ async def get_subscription_chart_data():
         subscription_query = """
             SELECT 
                 p.name,
-                COUNT(s.id) as value,
+                COUNT(a.id) as value,
                 CASE 
                     WHEN p.name ILIKE '%basic%' THEN '#3B82F6'
                     WHEN p.name ILIKE '%pro%' THEN '#10B981'
@@ -135,9 +134,8 @@ async def get_subscription_chart_data():
                     ELSE '#F59E0B'
                 END as color
             FROM plans p
-            LEFT JOIN subscriptions s ON p.id = s.plan_id 
-                AND s.status = 'active' 
-                AND s.deleted_at IS NULL
+            LEFT JOIN active_subscriptions a ON p.id = a.plan_id 
+                AND a.status = 'active'
             WHERE p.status = 'active'
             GROUP BY p.id, p.name
             ORDER BY value DESC
@@ -201,5 +199,7 @@ async def get_admin_activity():
         return activity_data
 
     except Exception as e:
+        logger.error(f"Error fetching admin activity: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         logger.error(f"Error fetching admin activity: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -9,6 +9,7 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { GenerateSampleData } from "@/components/dashboard/GenerateSampleData";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,8 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("month"); // "month", "week", "custom"
+  const [isLoading, setIsLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
   
   useEffect(() => {
     // Check if user is authenticated
@@ -24,7 +27,42 @@ const Dashboard = () => {
       navigate("/login", { replace: true });
       return;
     }
-  }, [user, navigate]);
+    
+    // Check if the user has any sample data on first load
+    const checkForSampleData = async () => {
+      if (!user || !firstLoad) return;
+      
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('sample_calls')
+          .select('count')
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+          // No sample data found, generate some
+          const { error: funcError } = await supabase.functions.invoke('generate-sample-data');
+          
+          if (funcError) throw funcError;
+          
+          toast({
+            title: "Welcome to Your Dashboard",
+            description: "We've generated some sample data for you to explore."
+          });
+        }
+        
+        setFirstLoad(false);
+      } catch (error) {
+        console.error("Error checking for sample data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkForSampleData();
+  }, [user, navigate, firstLoad, toast]);
   
   // Redirect to login if no user
   if (!user) {
