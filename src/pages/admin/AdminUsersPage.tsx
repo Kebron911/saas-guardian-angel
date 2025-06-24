@@ -1,9 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -19,21 +18,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Users, Search, MoreHorizontal, Shield, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, MoreHorizontal, Shield, Star, TrendingUp, TrendingDown } from "lucide-react";
 import { useAdminUsersData } from "@/hooks/useAdminUsersData";
 import { AddUserDialog } from "@/components/admin/AddUserDialog";
+import { TableFilters } from "@/components/admin/TableFilters";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminUsersPage = () => {
-  const { users, stats, isLoading, error, deleteUser, createUser } = useAdminUsersData();
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    users,
+    stats,
+    isLoading,
+    error,
+    deleteUser,
+    createUser,
+    searchTerm,
+    setSearchTerm,
+    roleFilter,
+    setRoleFilter,
+    statusFilter,
+    setStatusFilter,
+    sortBy,
+    setSortBy,
+    sortDirection,
+    setSortDirection,
+    dateRange,
+    setDateRange,
+    clearFilters
+  } = useAdminUsersData();
   const { toast } = useToast();
-
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleActionClick = async (action: string, userId: string) => {
     console.log(`${action} user ${userId}`);
@@ -45,7 +58,6 @@ const AdminUsersPage = () => {
         console.error("Failed to delete user:", error);
       }
     } else {
-      // For other actions, show a toast for now
       toast({
         title: "Action Triggered",
         description: `${action} action for user ${userId}`,
@@ -81,6 +93,40 @@ const AdminUsersPage = () => {
       </AdminLayout>
     );
   }
+
+  const sortOptions = [
+    { value: 'created_at', label: 'Created Date' },
+    { value: 'name', label: 'Name' },
+    { value: 'email', label: 'Email' },
+    { value: 'role', label: 'Role' },
+    { value: 'status', label: 'Status' }
+  ];
+
+  const filters = [
+    {
+      key: 'role',
+      label: 'Role',
+      value: roleFilter,
+      options: [
+        { value: 'all', label: 'All Roles' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'user', label: 'User' },
+        { value: 'affiliate', label: 'Affiliate' }
+      ],
+      onChange: setRoleFilter
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      value: statusFilter,
+      options: [
+        { value: 'all', label: 'All Status' },
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' }
+      ],
+      onChange: setStatusFilter
+    }
+  ];
 
   return (
     <AdminLayout>
@@ -139,26 +185,27 @@ const AdminUsersPage = () => {
         </Card>
       </div>
 
-      {/* Search and Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div className="relative w-full md:w-auto">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-          <Input 
-            placeholder="Search users..." 
-            className="pl-10 w-full md:w-[300px]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <AddUserDialog onCreateUser={createUser} />
-      </div>
-
       {/* Users Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>All Users</CardTitle>
+          <AddUserDialog onCreateUser={createUser} />
         </CardHeader>
         <CardContent>
+          <TableFilters
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            sortValue={sortBy}
+            onSortChange={setSortBy}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+            sortOptions={sortOptions}
+            filters={filters}
+            dateRange={dateRange}
+            onClearFilters={clearFilters}
+            searchPlaceholder="Search users..."
+          />
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -172,7 +219,7 @@ const AdminUsersPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -214,7 +261,7 @@ const AdminUsersPage = () => {
               </TableBody>
             </Table>
             
-            {filteredUsers.length === 0 && (
+            {users.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-500">No users found matching your search criteria.</p>
               </div>

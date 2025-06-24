@@ -53,16 +53,30 @@ export const useAdminReferralsData = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchAffiliates = async (search?: string) => {
+  // Affiliates filters
+  const [affiliateSearchTerm, setAffiliateSearchTerm] = useState('');
+  const [affiliateSortBy, setAffiliateSortBy] = useState('created_at');
+  const [affiliateSortDirection, setAffiliateSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [affiliateCommissionFilter, setAffiliateCommissionFilter] = useState('all');
+
+  // Payouts filters
+  const [payoutSearchTerm, setPayoutSearchTerm] = useState('');
+  const [payoutStatusFilter, setPayoutStatusFilter] = useState('all');
+  const [payoutSortBy, setPayoutSortBy] = useState('created_at');
+  const [payoutSortDirection, setPayoutSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [payoutDateRange, setPayoutDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined
+  });
+
+  const fetchAffiliates = async () => {
     try {
       console.log("Fetching affiliates from PostgreSQL API...");
       
-      const params = search ? `?search=${encodeURIComponent(search)}` : '';
-      const data = await apiClient.get(`/admin/affiliates${params}`);
+      const data = await apiClient.get(`/admin/affiliates`);
       console.log("Affiliates fetched:", data);
       
       setAffiliates(data || []);
-      setFilteredAffiliates(data || []);
     } catch (err: any) {
       console.error("Error fetching affiliates:", err);
       setError(err.message);
@@ -74,20 +88,14 @@ export const useAdminReferralsData = () => {
     }
   };
 
-  const fetchPayouts = async (status?: string, search?: string) => {
+  const fetchPayouts = async () => {
     try {
       console.log("Fetching referral payouts from PostgreSQL API...");
       
-      const params = new URLSearchParams();
-      if (status && status !== 'all-status') params.append('status', status);
-      if (search) params.append('search', search);
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-      
-      const data = await apiClient.get(`/admin/referral-payouts${queryString}`);
+      const data = await apiClient.get(`/admin/referral-payouts`);
       console.log("Referral payouts fetched:", data);
       
       setPayouts(data || []);
-      setFilteredPayouts(data || []);
     } catch (err: any) {
       console.error("Error fetching referral payouts:", err);
       setError(err.message);
@@ -123,11 +131,101 @@ export const useAdminReferralsData = () => {
     }
   };
 
+  // Filter affiliates
+  useEffect(() => {
+    let filtered = [...affiliates];
+
+    if (affiliateSearchTerm) {
+      filtered = filtered.filter(affiliate => 
+        affiliate.name.toLowerCase().includes(affiliateSearchTerm.toLowerCase()) ||
+        affiliate.email.toLowerCase().includes(affiliateSearchTerm.toLowerCase()) ||
+        affiliate.referral_code.toLowerCase().includes(affiliateSearchTerm.toLowerCase())
+      );
+    }
+
+    if (affiliateCommissionFilter !== 'all') {
+      if (affiliateCommissionFilter === 'high') {
+        filtered = filtered.filter(affiliate => affiliate.commission_rate >= 0.2);
+      } else if (affiliateCommissionFilter === 'medium') {
+        filtered = filtered.filter(affiliate => affiliate.commission_rate >= 0.1 && affiliate.commission_rate < 0.2);
+      } else if (affiliateCommissionFilter === 'low') {
+        filtered = filtered.filter(affiliate => affiliate.commission_rate < 0.1);
+      }
+    }
+
+    filtered.sort((a, b) => {
+      let aValue: any = a[affiliateSortBy as keyof ReferralAffiliate];
+      let bValue: any = b[affiliateSortBy as keyof ReferralAffiliate];
+
+      if (affiliateSortBy === 'created_at') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (aValue < bValue) return affiliateSortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return affiliateSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredAffiliates(filtered);
+  }, [affiliates, affiliateSearchTerm, affiliateSortBy, affiliateSortDirection, affiliateCommissionFilter]);
+
+  // Filter payouts
+  useEffect(() => {
+    let filtered = [...payouts];
+
+    if (payoutSearchTerm) {
+      filtered = filtered.filter(payout => 
+        payout.affiliate_name.toLowerCase().includes(payoutSearchTerm.toLowerCase()) ||
+        payout.email.toLowerCase().includes(payoutSearchTerm.toLowerCase())
+      );
+    }
+
+    if (payoutStatusFilter !== 'all') {
+      filtered = filtered.filter(payout => payout.status === payoutStatusFilter);
+    }
+
+    if (payoutDateRange.from || payoutDateRange.to) {
+      filtered = filtered.filter(payout => {
+        const payoutDate = new Date(payout.created_at);
+        const fromDate = payoutDateRange.from;
+        const toDate = payoutDateRange.to;
+        
+        if (fromDate && toDate) {
+          return payoutDate >= fromDate && payoutDate <= toDate;
+        } else if (fromDate) {
+          return payoutDate >= fromDate;
+        } else if (toDate) {
+          return payoutDate <= toDate;
+        }
+        return true;
+      });
+    }
+
+    filtered.sort((a, b) => {
+      let aValue: any = a[payoutSortBy as keyof ReferralPayout];
+      let bValue: any = b[payoutSortBy as keyof ReferralPayout];
+
+      if (payoutSortBy === 'created_at') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      } else if (payoutSortBy === 'amount') {
+        aValue = Number(aValue);
+        bValue = Number(bValue);
+      }
+
+      if (aValue < bValue) return payoutSortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return payoutSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredPayouts(filtered);
+  }, [payouts, payoutSearchTerm, payoutStatusFilter, payoutSortBy, payoutSortDirection, payoutDateRange]);
+
   const updatePayoutStatus = async (payoutId: string, status: string) => {
     try {
       console.log(`Updating payout ${payoutId} status to ${status}`);
       
-      // Add PUT method to apiClient
       const response = await fetch(`http://localhost:8000/admin/referral-payouts/${payoutId}`, {
         method: 'PUT',
         headers: {
@@ -158,36 +256,19 @@ export const useAdminReferralsData = () => {
     }
   };
 
-  const filterAffiliates = (searchTerm: string) => {
-    if (!searchTerm.trim()) {
-      setFilteredAffiliates(affiliates);
-      return;
-    }
-
-    const filtered = affiliates.filter(affiliate => 
-      affiliate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      affiliate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      affiliate.referral_code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    setFilteredAffiliates(filtered);
+  const clearAffiliateFilters = () => {
+    setAffiliateSearchTerm('');
+    setAffiliateSortBy('created_at');
+    setAffiliateSortDirection('desc');
+    setAffiliateCommissionFilter('all');
   };
 
-  const filterPayouts = (statusFilter: string, searchTerm: string) => {
-    let filtered = payouts;
-
-    if (statusFilter && statusFilter !== 'all-status') {
-      filtered = filtered.filter(payout => payout.status === statusFilter);
-    }
-
-    if (searchTerm && searchTerm.trim()) {
-      filtered = filtered.filter(payout => 
-        payout.affiliate_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payout.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    setFilteredPayouts(filtered);
+  const clearPayoutFilters = () => {
+    setPayoutSearchTerm('');
+    setPayoutStatusFilter('all');
+    setPayoutSortBy('created_at');
+    setPayoutSortDirection('desc');
+    setPayoutDateRange({ from: undefined, to: undefined });
   };
 
   const fetchAllData = async () => {
@@ -213,19 +294,34 @@ export const useAdminReferralsData = () => {
   }, []);
 
   return {
-    affiliates,
-    filteredAffiliates,
-    payouts,
-    filteredPayouts,
+    affiliates: filteredAffiliates,
+    payouts: filteredPayouts,
     stats,
     isLoading,
     error,
-    fetchAffiliates,
-    fetchPayouts,
-    fetchStats,
     updatePayoutStatus,
-    filterAffiliates,
-    filterPayouts,
-    fetchAllData
+    fetchAllData,
+    // Affiliate filters
+    affiliateSearchTerm,
+    setAffiliateSearchTerm,
+    affiliateSortBy,
+    setAffiliateSortBy,
+    affiliateSortDirection,
+    setAffiliateSortDirection,
+    affiliateCommissionFilter,
+    setAffiliateCommissionFilter,
+    clearAffiliateFilters,
+    // Payout filters
+    payoutSearchTerm,
+    setPayoutSearchTerm,
+    payoutStatusFilter,
+    setPayoutStatusFilter,
+    payoutSortBy,
+    setPayoutSortBy,
+    payoutSortDirection,
+    setPayoutSortDirection,
+    payoutDateRange,
+    setPayoutDateRange,
+    clearPayoutFilters
   };
 };

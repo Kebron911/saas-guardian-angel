@@ -31,6 +31,7 @@ export interface CreateUserData {
 
 export const useAdminUsersData = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<UserStats>({
     total_users: 0,
     total_admins: 0,
@@ -44,6 +45,17 @@ export const useAdminUsersData = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined
+  });
+
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
@@ -51,7 +63,6 @@ export const useAdminUsersData = () => {
       
       console.log("Fetching users from PostgreSQL API...");
       
-      // Fetch users from PostgreSQL API
       const data = await apiClient.get('/admin/users');
       console.log("Users fetched:", data);
       
@@ -83,6 +94,72 @@ export const useAdminUsersData = () => {
         variant: "destructive"
       });
     }
+  };
+
+  useEffect(() => {
+    let filtered = [...users];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Role filter
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(user => user.status === statusFilter);
+    }
+
+    // Date range filter
+    if (dateRange.from || dateRange.to) {
+      filtered = filtered.filter(user => {
+        const userDate = new Date(user.created_at);
+        const fromDate = dateRange.from;
+        const toDate = dateRange.to;
+        
+        if (fromDate && toDate) {
+          return userDate >= fromDate && userDate <= toDate;
+        } else if (fromDate) {
+          return userDate >= fromDate;
+        } else if (toDate) {
+          return userDate <= toDate;
+        }
+        return true;
+      });
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue: any = a[sortBy as keyof AdminUser];
+      let bValue: any = b[sortBy as keyof AdminUser];
+
+      if (sortBy === 'created_at') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredUsers(filtered);
+  }, [users, searchTerm, roleFilter, statusFilter, sortBy, sortDirection, dateRange]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setRoleFilter('all');
+    setStatusFilter('all');
+    setSortBy('created_at');
+    setSortDirection('desc');
+    setDateRange({ from: undefined, to: undefined });
   };
 
   const fetchAllData = async () => {
@@ -165,10 +242,23 @@ export const useAdminUsersData = () => {
   }, []);
 
   return {
-    users,
+    users: filteredUsers,
     stats,
     isLoading,
     error,
+    searchTerm,
+    setSearchTerm,
+    roleFilter,
+    setRoleFilter,
+    statusFilter,
+    setStatusFilter,
+    sortBy,
+    setSortBy,
+    sortDirection,
+    setSortDirection,
+    dateRange,
+    setDateRange,
+    clearFilters,
     fetchUsers: fetchAllData,
     createUser,
     updateUser,

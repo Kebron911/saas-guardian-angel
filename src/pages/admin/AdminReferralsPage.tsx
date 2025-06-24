@@ -1,39 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Filter,
-  ChevronDown,
-  Search,
-  Download,
-  Check,
-  Eye,
-  TrendingUp,
-  Users,
-  Settings,
-  BarChart,
-  User
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Check, Eye, TrendingUp, Users, Settings, BarChart } from "lucide-react";
 import { useAdminReferralsData } from "@/hooks/useAdminReferralsData";
+import { TableFilters } from "@/components/admin/TableFilters";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const ReferralSettingsTab = () => {
@@ -143,9 +116,22 @@ const ReferralSettingsTab = () => {
 };
 
 const ReferralPayoutsTab = () => {
-  const { filteredPayouts, updatePayoutStatus, isLoading } = useAdminReferralsData();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all-status");
+  const {
+    payouts,
+    updatePayoutStatus,
+    isLoading,
+    payoutSearchTerm,
+    setPayoutSearchTerm,
+    payoutStatusFilter,
+    setPayoutStatusFilter,
+    payoutSortBy,
+    setPayoutSortBy,
+    payoutSortDirection,
+    setPayoutSortDirection,
+    payoutDateRange,
+    setPayoutDateRange,
+    clearPayoutFilters
+  } = useAdminReferralsData();
 
   const handleActionClick = async (action: string, payoutId: string) => {
     console.log(`${action} payout ${payoutId}`);
@@ -163,45 +149,44 @@ const ReferralPayoutsTab = () => {
     return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
   }
 
+  const sortOptions = [
+    { value: 'created_at', label: 'Date' },
+    { value: 'amount', label: 'Amount' },
+    { value: 'affiliate_name', label: 'Affiliate Name' },
+    { value: 'status', label: 'Status' }
+  ];
+
+  const filters = [
+    {
+      key: 'status',
+      label: 'Status',
+      value: payoutStatusFilter,
+      options: [
+        { value: 'all', label: 'All Status' },
+        { value: 'paid', label: 'Paid' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'processing', label: 'Processing' },
+        { value: 'failed', label: 'Failed' }
+      ],
+      onChange: setPayoutStatusFilter
+    }
+  ];
+
   return (
     <div>
-      <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input 
-            placeholder="Search affiliates..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-status">All Status</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button variant="outline" className="flex items-center">
-            <Filter className="mr-2 h-4 w-4" />
-            <span>Date Range</span>
-            <ChevronDown className="ml-2 h-4 w-4" />
-          </Button>
-          
-          <Button variant="outline" className="flex items-center">
-            <Download className="mr-2 h-4 w-4" />
-            <span>Export</span>
-          </Button>
-        </div>
-      </div>
+      <TableFilters
+        searchValue={payoutSearchTerm}
+        onSearchChange={setPayoutSearchTerm}
+        sortValue={payoutSortBy}
+        onSortChange={setPayoutSortBy}
+        sortDirection={payoutSortDirection}
+        onSortDirectionChange={setPayoutSortDirection}
+        sortOptions={sortOptions}
+        filters={filters}
+        dateRange={payoutDateRange}
+        onClearFilters={clearPayoutFilters}
+        searchPlaceholder="Search affiliates..."
+      />
       
       <Card>
         <div className="overflow-x-auto">
@@ -218,21 +203,20 @@ const ReferralPayoutsTab = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPayouts.map((payout) => (
+              {payouts.map((payout) => (
                 <tr key={payout.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium">{payout.id.substring(0, 8)}...</td>
                   <td className="px-4 py-3 text-sm">{payout.affiliate_name}</td>
                   <td className="px-4 py-3 text-sm">{payout.email}</td>
                   <td className="px-4 py-3 text-sm text-right">${payout.amount.toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm">
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      payout.status === 'paid' ? 'bg-green-100 text-green-800' :
-                      payout.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      payout.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
+                    <Badge variant={
+                      payout.status === 'paid' ? 'default' :
+                      payout.status === 'pending' ? 'secondary' :
+                      payout.status === 'processing' ? 'outline' : 'destructive'
+                    }>
                       {payout.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-sm">{new Date(payout.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-sm text-right">
@@ -240,12 +224,10 @@ const ReferralPayoutsTab = () => {
                       {payout.status === 'pending' && (
                         <Button variant="ghost" size="icon" onClick={() => handleActionClick('mark-paid', payout.id)}>
                           <Check className="h-4 w-4" />
-                          <span className="sr-only">Mark as Paid</span>
                         </Button>
                       )}
                       <Button variant="ghost" size="icon">
                         <Eye className="h-4 w-4" />
-                        <span className="sr-only">View</span>
                       </Button>
                     </div>
                   </td>
@@ -254,7 +236,7 @@ const ReferralPayoutsTab = () => {
             </tbody>
           </table>
         </div>
-        {filteredPayouts.length === 0 && (
+        {payouts.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No payouts found matching your search criteria
           </div>
@@ -273,7 +255,6 @@ const ReferralReportsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
@@ -335,57 +316,66 @@ const ReferralReportsTab = () => {
           </CardContent>
         </Card>
       </div>
-      
-      {/* Export Reports Section */}
-      <div className="flex justify-end">
-        <Button className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Export All Reports
-        </Button>
-      </div>
     </div>
   );
 };
 
 const AffiliatesTab = () => {
-  const { filteredAffiliates, filterAffiliates, isLoading } = useAdminReferralsData();
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    filterAffiliates(term);
-  };
+  const {
+    affiliates,
+    isLoading,
+    affiliateSearchTerm,
+    setAffiliateSearchTerm,
+    affiliateSortBy,
+    setAffiliateSortBy,
+    affiliateSortDirection,
+    setAffiliateSortDirection,
+    affiliateCommissionFilter,
+    setAffiliateCommissionFilter,
+    clearAffiliateFilters
+  } = useAdminReferralsData();
   
   if (isLoading) {
     return <div className="flex justify-center my-12"><LoadingSpinner size="lg" /></div>;
   }
+
+  const sortOptions = [
+    { value: 'created_at', label: 'Joined Date' },
+    { value: 'name', label: 'Name' },
+    { value: 'total_referrals', label: 'Total Referrals' },
+    { value: 'total_earnings', label: 'Total Earnings' },
+    { value: 'commission_rate', label: 'Commission Rate' }
+  ];
+
+  const filters = [
+    {
+      key: 'commission',
+      label: 'Commission Rate',
+      value: affiliateCommissionFilter,
+      options: [
+        { value: 'all', label: 'All Rates' },
+        { value: 'high', label: 'High (20%+)' },
+        { value: 'medium', label: 'Medium (10-20%)' },
+        { value: 'low', label: 'Low (<10%)' }
+      ],
+      onChange: setAffiliateCommissionFilter
+    }
+  ];
   
   return (
     <div>
-      <div className="flex flex-col md:flex-row md:items-center mb-6 gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input 
-            placeholder="Search affiliates..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center">
-            <Filter className="mr-2 h-4 w-4" />
-            <span>More Filters</span>
-          </Button>
-          
-          <Button variant="outline" className="flex items-center">
-            <Download className="mr-2 h-4 w-4" />
-            <span>Export</span>
-          </Button>
-        </div>
-      </div>
+      <TableFilters
+        searchValue={affiliateSearchTerm}
+        onSearchChange={setAffiliateSearchTerm}
+        sortValue={affiliateSortBy}
+        onSortChange={setAffiliateSortBy}
+        sortDirection={affiliateSortDirection}
+        onSortDirectionChange={setAffiliateSortDirection}
+        sortOptions={sortOptions}
+        filters={filters}
+        onClearFilters={clearAffiliateFilters}
+        searchPlaceholder="Search affiliates..."
+      />
       
       <Card>
         <div className="overflow-x-auto">
@@ -402,14 +392,14 @@ const AffiliatesTab = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredAffiliates.map((affiliate) => (
+              {affiliates.map((affiliate) => (
                 <tr key={affiliate.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium">{affiliate.name}</td>
                   <td className="px-4 py-3 text-sm">{affiliate.email}</td>
                   <td className="px-4 py-3 text-sm">
-                    <span className="inline-block px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                    <Badge variant="outline">
                       {affiliate.referral_code || 'N/A'}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-sm">{Math.round(affiliate.commission_rate * 100)}%</td>
                   <td className="px-4 py-3 text-sm text-center">{affiliate.total_referrals}</td>
@@ -420,7 +410,7 @@ const AffiliatesTab = () => {
             </tbody>
           </table>
         </div>
-        {filteredAffiliates.length === 0 && (
+        {affiliates.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No affiliates found matching your search
           </div>
