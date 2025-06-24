@@ -64,7 +64,13 @@ const BlogCategoriesPage = () => {
         
         if (postsError) throw postsError;
         
-        setPosts(postsData);
+        // Add the missing views property to each post
+        const postsWithViews = postsData.map(post => ({
+          ...post,
+          views: 0 // Default views since it doesn't exist in the database yet
+        }));
+        
+        setPosts(postsWithViews);
         
       } catch (err: any) {
         console.error("Error fetching category data:", err);
