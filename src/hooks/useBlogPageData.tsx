@@ -46,6 +46,7 @@ export const useBlogPageData = (slug?: string): UseBlogPageDataResult => {
 
       const processedPosts: BlogPostWithCategory[] = posts?.map((post: any) => ({
         ...post,
+        views: 0, // Default views since it doesn't exist in the database yet
         categories: post.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
       })) || [];
 
@@ -85,6 +86,7 @@ export const useBlogPageData = (slug?: string): UseBlogPageDataResult => {
 
       const processedPost: BlogPostWithCategory = {
         ...post,
+        views: 0, // Default views since it doesn't exist in the database yet
         categories: post.blog_post_categories?.map((pc: any) => pc.blog_categories) || []
       };
 
@@ -120,28 +122,8 @@ export const useBlogPageData = (slug?: string): UseBlogPageDataResult => {
 
   const incrementViews = async (postId: string) => {
     try {
-      // Get current views count first
-      const { data: currentPost, error: fetchError } = await supabase
-        .from("blog_posts")
-        .select("views")
-        .eq("id", postId)
-        .single();
-
-      if (fetchError) {
-        console.error("Error fetching current views:", fetchError);
-        return;
-      }
-
-      const currentViews = currentPost?.views || 0;
-      
-      const { error } = await supabase
-        .from("blog_posts")
-        .update({ views: currentViews + 1 })
-        .eq("id", postId);
-
-      if (error) {
-        console.error("Error incrementing views:", error);
-      }
+      // Since views column doesn't exist yet, we'll just log this action
+      console.log("Would increment views for post:", postId);
     } catch (err: any) {
       console.error("Error in incrementViews:", err);
     }

@@ -152,7 +152,10 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
               defaultMonth={dateRange.from}
               selected={dateRange as DateRange}
               onSelect={(range: DateRange | undefined) => 
-                onDateRangeChange(range || { from: undefined, to: undefined })
+                onDateRangeChange({ 
+                  from: range?.from || undefined, 
+                  to: range?.to || undefined 
+                })
               }
               numberOfMonths={2}
             />

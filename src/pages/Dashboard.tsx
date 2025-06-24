@@ -29,10 +29,10 @@ const Dashboard = () => {
           <LiveStatus />
         </div>
 
-        <DashboardStats stats={stats} />
+        <DashboardStats {...stats} />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CallTrendChart data={callTrends} />
+          <CallTrendChart trends={callTrends} />
           <QuickActions />
         </div>
         
