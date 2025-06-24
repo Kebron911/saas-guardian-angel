@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
-import { DatabaseInterface } from '@/database_interface';
-import { useAuth } from "@/contexts/AuthContext";
 
-interface CallTrend {
-  day: string;
-  calls: number;
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface CallTrend {
+  date: string;
+  incoming: number;
+  outgoing: number;
   bookings: number;
 }
 
-interface DashboardStats {
+export interface DashboardStats {
   totalCalls: number;
   avgDuration: string;
   bookingsMade: number;
@@ -16,85 +17,68 @@ interface DashboardStats {
   assistantUptime: string;
 }
 
-const sampleData = [
-  { day: '2024-01-01', calls: 24, bookings: 8, user_id: '' },
-  { day: '2024-01-02', calls: 31, bookings: 12, user_id: '' },
-  { day: '2024-01-03', calls: 28, bookings: 10, user_id: '' },
-  { day: '2024-01-04', calls: 35, bookings: 15, user_id: '' },
-  { day: '2024-01-05', calls: 42, bookings: 18, user_id: '' }
-];
-
-export const useDashboardData = (filter: string = 'month') => {
-  const [isLoading, setIsLoading] = useState(true);
+export const useDashboardData = () => {
   const [callTrends, setCallTrends] = useState<CallTrend[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalCalls: 0,
-    avgDuration: '',
+    avgDuration: "0m",
     bookingsMade: 0,
     missedCallsRecovered: 0,
-    assistantUptime: ''
+    assistantUptime: "99.9%"
   });
-  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Fetching dashboard data from Supabase...");
+      
+      // Fetch calls data from Supabase
+      const { data: calls, error: callsError } = await supabase
+        .from("calls")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (callsError) {
+        console.error("Error fetching calls:", callsError);
+      }
+
+      // Generate sample data since we don't have real data yet
+      const sampleTrends: CallTrend[] = [
+        { date: "2024-06-20", incoming: 45, outgoing: 12, bookings: 8 },
+        { date: "2024-06-21", incoming: 52, outgoing: 15, bookings: 12 },
+        { date: "2024-06-22", incoming: 38, outgoing: 9, bookings: 6 },
+        { date: "2024-06-23", incoming: 61, outgoing: 18, bookings: 15 },
+        { date: "2024-06-24", incoming: 49, outgoing: 13, bookings: 9 }
+      ];
+
+      const sampleStats: DashboardStats = {
+        totalCalls: calls?.length || 245,
+        avgDuration: "3m 42s",
+        bookingsMade: 50,
+        missedCallsRecovered: 23,
+        assistantUptime: "99.9%"
+      };
+
+      setCallTrends(sampleTrends);
+      setStats(sampleStats);
+      
+    } catch (err: any) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      
-      try {
-        let data = await DatabaseInterface.select('sample_calls', { user_id: user.id });
-        
-        if (!data || data.length === 0) {
-          // Insert sample data if none exists
-          console.log("No dashboard data found, inserting samples...");
-          const samplesWithUserId = sampleData.map(item => ({ ...item, user_id: user.id }));
-          for (const sample of samplesWithUserId) {
-            await DatabaseInterface.insert('sample_calls', sample);
-          }
-          data = await DatabaseInterface.select('sample_calls', { user_id: user.id });
-        }
+    fetchData();
+  }, []);
 
-        if (data && data.length > 0) {
-          const trends = data.map(item => ({
-            day: item.day,
-            calls: item.calls,
-            bookings: item.bookings
-          }));
-          
-          setCallTrends(trends);
-          
-          // Calculate stats from the data
-          const totalCalls = trends.reduce((sum, item) => sum + item.calls, 0);
-          const totalBookings = trends.reduce((sum, item) => sum + item.bookings, 0);
-          
-          setStats({
-            totalCalls,
-            avgDuration: '2:47',
-            bookingsMade: totalBookings,
-            missedCallsRecovered: Math.floor(totalCalls * 0.12),
-            assistantUptime: '99.9%'
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        setCallTrends([]);
-        setStats({
-          totalCalls: 0,
-          avgDuration: '0:00',
-          bookingsMade: 0,
-          missedCallsRecovered: 0,
-          assistantUptime: '0%'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    if (user) {
-      fetchData();
-    }
-  }, [filter, user]);
-
-  return { callTrends, stats, isLoading };
+  return {
+    callTrends,
+    stats,
+    isLoading,
+    refetch: fetchData
+  };
 };
