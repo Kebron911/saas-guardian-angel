@@ -20,7 +20,7 @@ export function useSupportTickets() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/analytics/support-tickets`);
+        const response = await fetch(`${API_BASE_URL}/admin/support-tickets`);
         if (!response.ok) throw new Error('Failed to fetch tickets');
         const data = await response.json();
         setTickets(data);

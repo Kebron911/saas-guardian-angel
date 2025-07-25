@@ -9,28 +9,181 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      affiliates: {
+      admin_revenue_data: {
         Row: {
-          commission_rate: number | null
           created_at: string
           id: string
+          name: string
+          revenue: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          revenue: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          revenue?: number
+        }
+        Relationships: []
+      }
+      admin_stats: {
+        Row: {
+          change: string
+          created_at: string
+          icon: string
+          icon_bg: string
+          id: string
+          title: string
+          value: string
+        }
+        Insert: {
+          change: string
+          created_at?: string
+          icon: string
+          icon_bg: string
+          id?: string
+          title: string
+          value: string
+        }
+        Update: {
+          change?: string
+          created_at?: string
+          icon?: string
+          icon_bg?: string
+          id?: string
+          title?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      admin_subscription_data: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          value: number
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          name: string
+          value: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      admin_user_activities: {
+        Row: {
+          details: string
+          event_type: string
+          id: string
+          performed_by: string
+          timestamp: string
+        }
+        Insert: {
+          details: string
+          event_type: string
+          id?: string
+          performed_by: string
+          timestamp?: string
+        }
+        Update: {
+          details?: string
+          event_type?: string
+          id?: string
+          performed_by?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      affiliates: {
+        Row: {
+          Clicks: number | null
+          commission_rate: number | null
+          created_at: string
+          Earnings: number | null
+          Email: string | null
+          id: string
+          Name: string | null
           referral_code: string | null
+          Revenue: number | null
+          "Sign Ups": number | null
+          Tier_1: number | null
+          Tier_2: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          Clicks?: number | null
           commission_rate?: number | null
           created_at?: string
+          Earnings?: number | null
+          Email?: string | null
           id?: string
+          Name?: string | null
           referral_code?: string | null
+          Revenue?: number | null
+          "Sign Ups"?: number | null
+          Tier_1?: number | null
+          Tier_2?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          Clicks?: number | null
           commission_rate?: number | null
           created_at?: string
+          Earnings?: number | null
+          Email?: string | null
           id?: string
+          Name?: string | null
           referral_code?: string | null
+          Revenue?: number | null
+          "Sign Ups"?: number | null
+          Tier_1?: number | null
+          Tier_2?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -38,19 +191,19 @@ export type Database = {
       }
       blog_categories: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
           name: string
           slug: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           name: string
           slug: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           name?: string
           slug?: string
@@ -91,7 +244,7 @@ export type Database = {
         Row: {
           author_id: string | null
           content: string
-          created_at: string
+          created_at: string | null
           excerpt: string | null
           featured_image: string | null
           id: string
@@ -99,12 +252,13 @@ export type Database = {
           published_at: string | null
           slug: string
           title: string
-          updated_at: string
+          updated_at: string | null
+          views: number | null
         }
         Insert: {
           author_id?: string | null
           content: string
-          created_at?: string
+          created_at?: string | null
           excerpt?: string | null
           featured_image?: string | null
           id?: string
@@ -112,12 +266,13 @@ export type Database = {
           published_at?: string | null
           slug: string
           title: string
-          updated_at?: string
+          updated_at?: string | null
+          views?: number | null
         }
         Update: {
           author_id?: string | null
           content?: string
-          created_at?: string
+          created_at?: string | null
           excerpt?: string | null
           featured_image?: string | null
           id?: string
@@ -125,7 +280,8 @@ export type Database = {
           published_at?: string | null
           slug?: string
           title?: string
-          updated_at?: string
+          updated_at?: string | null
+          views?: number | null
         }
         Relationships: []
       }
@@ -211,6 +367,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      orders: {
+        Row: {
+          business_name: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          industry: string | null
+          last_name: string
+          phone: string
+          plan: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          industry?: string | null
+          last_name: string
+          phone: string
+          plan: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          industry?: string | null
+          last_name?: string
+          phone?: string
+          plan?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_history: {
+        Row: {
+          Amount: number | null
+          created_at: string
+          id: number
+          payment_method: string | null
+          referrals: number | null
+          status: string | null
+        }
+        Insert: {
+          Amount?: number | null
+          created_at?: string
+          id?: number
+          payment_method?: string | null
+          referrals?: number | null
+          status?: string | null
+        }
+        Update: {
+          Amount?: number | null
+          created_at?: string
+          id?: number
+          payment_method?: string | null
+          referrals?: number | null
+          status?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -312,6 +537,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sample_calls: {
+        Row: {
+          bookings: number
+          calls: number
+          created_at: string
+          day: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          bookings: number
+          calls: number
+          created_at?: string
+          day: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          bookings?: number
+          calls?: number
+          created_at?: string
+          day?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -425,6 +677,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_sample_data: {
+        Args: { uid: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -453,7 +709,7 @@ export type Tables<
   }
     ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -554,3 +810,5 @@ export const Constants = {
     },
   },
 } as const
+
+// No action needed, type definition only. If 'profiles' is a table, document as deprecated or remove if not used.

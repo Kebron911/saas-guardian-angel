@@ -1,10 +1,10 @@
-
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from postgreSQL.database import DatabaseInterface
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Body, Request
 from pydantic import BaseModel
 import logging
+from postgreSQL.admin.activity_log import log_admin_activity
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -20,6 +20,20 @@ class PromoCodeCreate(BaseModel):
     max_uses: Optional[int] = None
     status: str = 'active'
 
+class PlanUpdate(BaseModel):
+    name: Optional[str]
+    price: Optional[float]
+    duration: Optional[str]
+    description: Optional[str]
+    status: Optional[str]
+
+class PlanCreate(BaseModel):
+    name: str
+    price: float
+    duration: str
+    description: Optional[str] = ""
+    status: str
+
 def get_transactions(search: str = None, type_filter: str = None, status_filter: str = None) -> List[Dict[str, Any]]:
     """Get all transactions from the database with optional filters"""
     try:
@@ -29,16 +43,15 @@ def get_transactions(search: str = None, type_filter: str = None, status_filter:
         SELECT 
             t.id,
             t.user_id,
-            COALESCE(p.first_name || ' ' || p.last_name, 'Unknown User') as user_name,
-            COALESCE(au.email, 'No email') as email,
+            COALESCE(up.first_name || ' ' || up.last_name, 'Unknown User') as user_name,
+            COALESCE(up.email, 'No email') as email,
             t.amount,
             t.type,
             t.status,
             t.gateway,
             t.created_at
         FROM transactions t
-        LEFT JOIN profiles p ON t.user_id = p.id
-        LEFT JOIN auth.users au ON t.user_id = au.id
+        LEFT JOIN user_profiles up ON t.user_id = up.user_id
         ORDER BY t.created_at DESC
         """
         
@@ -140,7 +153,7 @@ def get_subscriptions(search: str = None, plan_filter: str = None, status_filter
         SELECT 
             s.id,
             s.user_id,
-            COALESCE(p.first_name || ' ' || p.last_name, 'Unknown User') as user_name,
+            COALESCE(up.first_name || ' ' || up.last_name, 'Unknown User') as user_name,
             pl.name as plan_name,
             s.status,
             s.current_period_start,
@@ -149,7 +162,7 @@ def get_subscriptions(search: str = None, plan_filter: str = None, status_filter
             CASE WHEN s.cancel_at_period_end = true THEN false ELSE true END as auto_renew,
             s.created_at
         FROM subscriptions s
-        LEFT JOIN profiles p ON s.user_id = p.id
+        LEFT JOIN user_profiles up ON s.user_id = up.user_id
         LEFT JOIN plans pl ON s.plan_id = pl.id
         WHERE s.deleted_at IS NULL
         ORDER BY s.created_at DESC
@@ -204,6 +217,18 @@ def get_subscriptions(search: str = None, plan_filter: str = None, status_filter
         logger.error(f"Error fetching subscriptions: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+def parse_expiration_date(exp):
+    from datetime import datetime
+    import dateutil.parser
+    if isinstance(exp, datetime):
+        return exp
+    if isinstance(exp, str):
+        try:
+            return dateutil.parser.isoparse(exp)
+        except Exception:
+            return None
+    return None
+
 def get_promo_codes(search: str = None, status_filter: str = None) -> List[Dict[str, Any]]:
     """Get all promo codes from the database with optional filters"""
     try:
@@ -218,13 +243,34 @@ def get_promo_codes(search: str = None, status_filter: str = None) -> List[Dict[
             pc.usage_count,
             pc.max_uses,
             pc.status,
-            pc.created_at
+            pc.created_at,
+            pc.deleted_at
         FROM promo_codes pc
         ORDER BY pc.created_at DESC
         """
         
         result = DatabaseInterface.execute_query(query)
-        
+
+        # Check expiration and update status if needed
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        for promo in result:
+            exp = promo.get("expiration_date")
+            if exp and promo["status"] == "active":
+                try:
+                    exp_dt = parse_expiration_date(exp)
+                    if exp_dt is None:
+                        raise ValueError(f"Could not parse expiration_date: {exp}")
+                    if exp_dt.tzinfo is None:
+                        from datetime import timezone
+                        exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                    if exp_dt < now:
+                        DatabaseInterface.update("promo_codes", {"status": "inactive", "deleted_at": now}, {"id": promo["id"]})
+                        promo["status"] = "inactive"
+                        promo["deleted_at"] = now.isoformat()
+                except Exception as e:
+                    logger.warning(f"Could not parse expiration_date for promo {promo['id']}: {e}")
+
         # Apply filters
         if status_filter and status_filter != 'all-status' and result:
             result = [p for p in result if p["status"] == status_filter]
@@ -334,16 +380,125 @@ async def api_get_promo_codes(
         logger.error(f"Error in api_get_promo_codes: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/plans")
+async def create_plan(request: Request, plan: PlanCreate):
+    try:
+        logger.info(f"Creating plan: {plan.name}")
+        insert_data = plan.dict()
+        plan_id = DatabaseInterface.insert("plans", insert_data)
+        if not plan_id:
+            raise HTTPException(status_code=500, detail="Failed to create plan")
+        # Log admin activity
+        admin_id = getattr(getattr(request.state, "user", None), "id", None)
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        log_admin_activity(
+            event_type='create_plan',
+            performed_by=admin_id,
+            details=f"Created plan: {plan.name}",
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        return {"id": plan_id, "message": "Plan created successfully"}
+    except Exception as e:
+        logger.error(f"Error creating plan: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/promo-codes")
-async def api_create_promo_code(promo_data: PromoCodeCreate):
+async def api_create_promo_code(request: Request, promo_data: PromoCodeCreate):
     """API endpoint to create a new promo code"""
     logger.info(f"=== API endpoint POST /admin/promo-codes called ===")
     try:
         result = create_promo_code(promo_data)
+        # Log admin activity
+        admin_id = getattr(getattr(request.state, "user", None), "id", None)
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        log_admin_activity(
+            event_type='create_promo_code',
+            performed_by=admin_id,
+            details=f"Created promo code: {promo_data.code}",
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
         logger.info("Successfully created promo code")
         return result
     except Exception as e:
         logger.error(f"Error in api_create_promo_code: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-logger.info("=== FINANCE MODULE: Finance router ready with endpoints ===")
+@router.put("/plans/{plan_id}")
+async def update_plan(plan_id: str, request: Request, plan: PlanUpdate = Body(...)):
+    try:
+        logger.info(f"Updating plan {plan_id} with {plan}")
+        update_data = {k: v for k, v in plan.dict().items() if v is not None}
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        updated = DatabaseInterface.update("plans", update_data, {"id": plan_id})
+        if not updated:
+            raise HTTPException(status_code=404, detail="Plan not found")
+        # Log admin activity
+        admin_id = getattr(getattr(request.state, "user", None), "id", None)
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        log_admin_activity(
+            event_type='update_plan',
+            performed_by=admin_id,
+            details=f"Updated plan: {plan_id}",
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        return {"id": plan_id, "message": "Plan updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating plan: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/plans/{plan_id}/soft-delete")
+async def soft_delete_plan(plan_id: str, request: Request):
+    try:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        update_data = {"status": "inactive", "deleted_at": now}
+        updated = DatabaseInterface.update("plans", update_data, {"id": plan_id})
+        if not updated:
+            raise HTTPException(status_code=404, detail="Plan not found")
+        # Log admin activity
+        admin_id = getattr(getattr(request.state, "user", None), "id", None)
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        log_admin_activity(
+            event_type='soft_delete_plan',
+            performed_by=admin_id,
+            details=f"Soft-deleted plan: {plan_id}",
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        return {"id": plan_id, "message": "Plan soft-deleted (status set to inactive, deleted_at set)"}
+    except Exception as e:
+        logger.error(f"Error soft-deleting plan: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/promo-codes/{promo_id}/soft-delete")
+async def soft_delete_promo_code(promo_id: str, request: Request):
+    try:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        update_data = {"status": "inactive", "deleted_at": now}
+        updated = DatabaseInterface.update("promo_codes", update_data, {"id": promo_id})
+        if not updated:
+            raise HTTPException(status_code=404, detail="Promo code not found")
+        # Log admin activity
+        admin_id = getattr(getattr(request.state, "user", None), "id", None)
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        log_admin_activity(
+            event_type='soft_delete_promo_code',
+            performed_by=admin_id,
+            details=f"Soft-deleted promo code: {promo_id}",
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        return {"id": promo_id, "message": "Promo code soft-deleted (status set to inactive, deleted_at set)"}
+    except Exception as e:
+        logger.error(f"Error soft-deleting promo code: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

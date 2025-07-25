@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -103,5 +102,11 @@
   .dark input[type="url"],
   .dark select {
     @apply bg-muted text-foreground;
+  }
+
+  /* Fix for payout notes textarea always white */
+  textarea#payout-notes {
+    background-color: #fff !important;
+    color: #222 !important;
   }
 }

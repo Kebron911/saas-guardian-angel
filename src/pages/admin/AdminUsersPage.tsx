@@ -1,8 +1,8 @@
-
-import React from "react";
+import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -18,35 +18,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Users, MoreHorizontal, Shield, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, Search, MoreHorizontal, Shield, Star, TrendingUp, TrendingDown } from "lucide-react";
 import { useAdminUsersData } from "@/hooks/useAdminUsersData";
 import { AddUserDialog } from "@/components/admin/AddUserDialog";
-import { TableFilters } from "@/components/admin/TableFilters";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem 
+} from "@/components/ui/select";
 
 const AdminUsersPage = () => {
   const {
-    users,
-    stats,
-    isLoading,
-    error,
-    deleteUser,
-    createUser,
-    searchTerm,
-    setSearchTerm,
-    roleFilter,
-    setRoleFilter,
-    statusFilter,
-    setStatusFilter,
-    sortBy,
-    setSortBy,
-    sortDirection,
-    setSortDirection,
-    dateRange,
-    setDateRange,
-    clearFilters
+    users, stats, isLoading, error,
+    fetchUsers, createUser, updateUser, deleteUser,
+    roleFilter, setRoleFilter,
+    statusFilter, setStatusFilter,
+    dateRange, setDateRange,
   } = useAdminUsersData();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleActionClick = async (action: string, userId: string) => {
     console.log(`${action} user ${userId}`);
@@ -57,6 +54,8 @@ const AdminUsersPage = () => {
       } catch (error) {
         console.error("Failed to delete user:", error);
       }
+    } else if (action === 'edit') {
+      setEditUserId(userId);
     } else {
       toast({
         title: "Action Triggered",
@@ -72,6 +71,10 @@ const AdminUsersPage = () => {
       return <TrendingDown className="h-3 w-3 text-red-500" />;
     }
     return null;
+  };
+
+  const handleSearch = () => {
+    fetchUsers(roleFilter, statusFilter, dateRange.from, dateRange.to);
   };
 
   if (isLoading) {
@@ -93,40 +96,6 @@ const AdminUsersPage = () => {
       </AdminLayout>
     );
   }
-
-  const sortOptions = [
-    { value: 'created_at', label: 'Created Date' },
-    { value: 'name', label: 'Name' },
-    { value: 'email', label: 'Email' },
-    { value: 'role', label: 'Role' },
-    { value: 'status', label: 'Status' }
-  ];
-
-  const filters = [
-    {
-      key: 'role',
-      label: 'Role',
-      value: roleFilter,
-      options: [
-        { value: 'all', label: 'All Roles' },
-        { value: 'admin', label: 'Admin' },
-        { value: 'user', label: 'User' },
-        { value: 'affiliate', label: 'Affiliate' }
-      ],
-      onChange: setRoleFilter
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      value: statusFilter,
-      options: [
-        { value: 'all', label: 'All Status' },
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' }
-      ],
-      onChange: setStatusFilter
-    }
-  ];
 
   return (
     <AdminLayout>
@@ -185,27 +154,80 @@ const AdminUsersPage = () => {
         </Card>
       </div>
 
+      {/* Search and Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div className="relative w-full md:w-auto">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+          <Input 
+            placeholder="Search users..." 
+            className="pl-10 w-full md:w-[300px]"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+        </div>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="All Roles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="affiliate">Affiliate</SelectItem>
+            <SelectItem value="user">User</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex gap-2 items-center">
+          <Input
+            type="date"
+            value={dateRange.from || ""}
+            onChange={e => setDateRange({ ...dateRange, from: e.target.value })}
+            className="w-[130px]"
+            placeholder="From"
+          />
+          <span>-</span>
+          <Input
+            type="date"
+            value={dateRange.to || ""}
+            onChange={e => setDateRange({ ...dateRange, to: e.target.value })}
+            className="w-[130px]"
+            placeholder="To"
+          />
+        </div>
+        <Button onClick={handleSearch} variant="outline">
+          Search
+        </Button>
+        <AddUserDialog onCreateUser={createUser} />
+        {editUserId && (
+          <AddUserDialog
+            user={users.find(u => u.id === editUserId)}
+            onCreateUser={async (data) => {
+              await updateUser(editUserId, data);
+              setEditUserId(null);
+            }}
+            onClose={() => setEditUserId(null)}
+            isEdit
+          />
+        )}
+      </div>
+
       {/* Users Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>All Users</CardTitle>
-          <AddUserDialog onCreateUser={createUser} />
         </CardHeader>
         <CardContent>
-          <TableFilters
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            sortValue={sortBy}
-            onSortChange={setSortBy}
-            sortDirection={sortDirection}
-            onSortDirectionChange={setSortDirection}
-            sortOptions={sortOptions}
-            filters={filters}
-            dateRange={dateRange}
-            onClearFilters={clearFilters}
-            searchPlaceholder="Search users..."
-          />
-
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -219,7 +241,7 @@ const AdminUsersPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -247,9 +269,6 @@ const AdminUsersPage = () => {
                           <DropdownMenuItem onClick={() => handleActionClick('edit', user.id)}>
                             Edit User
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleActionClick('permissions', user.id)}>
-                            Manage Permissions
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleActionClick('delete', user.id)}>
                             Delete User
                           </DropdownMenuItem>
@@ -261,7 +280,7 @@ const AdminUsersPage = () => {
               </TableBody>
             </Table>
             
-            {users.length === 0 && (
+            {filteredUsers.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-500">No users found matching your search criteria.</p>
               </div>

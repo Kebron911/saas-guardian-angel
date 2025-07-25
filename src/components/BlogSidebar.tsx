@@ -1,9 +1,16 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import BlogCategoriesList from "./BlogCategoriesList";
+import { useBlogPageData } from "@/hooks/useBlogPageData";
 
 const BlogSidebar = () => {
+  const { posts, isLoading } = useBlogPageData();
+
+  // Sort posts by published_at descending
+  const recentPosts = [...posts]
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+    .slice(0, 5);
+
   return (
     <aside className="space-y-8">
       <div className="bg-white rounded-lg p-6 shadow-sm">
@@ -19,16 +26,25 @@ const BlogSidebar = () => {
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <h3 className="text-lg font-semibold mb-4">Recent Posts</h3>
         <div className="space-y-4">
-          {/* This is a simplified example - in a real application you'd fetch recent posts */}
-          <Link to="/blog/sample-post-1" className="block hover:text-[#9b87f5]">
-            How AI is Transforming Customer Service
-          </Link>
-          <Link to="/blog/sample-post-2" className="block hover:text-[#9b87f5]">
-            5 Ways to Improve Your Business Communication
-          </Link>
-          <Link to="/blog/sample-post-3" className="block hover:text-[#9b87f5]">
-            The Benefits of an AI Receptionist
-          </Link>
+          {isLoading ? (
+            <div className="animate-pulse space-y-2">
+              {[1,2,3].map(i => (
+                <div key={i} className="h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              ))}
+            </div>
+          ) : recentPosts.length > 0 ? (
+            recentPosts.map(post => (
+              <Link
+                key={post.id}
+                to={`/blog/${post.slug}`}
+                className="block hover:text-[#9b87f5]"
+              >
+                {post.title}
+              </Link>
+            ))
+          ) : (
+            <div className="text-gray-500 dark:text-gray-400">No recent posts.</div>
+          )}
         </div>
       </div>
     </aside>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,11 +29,11 @@ const BlogCategoriesTable = ({
             </tr>
           </thead>
           <tbody>
-            {categories.map((category) => {
-              const postsCount = posts.filter(post => 
-                post.categories?.some(cat => cat.id === category.id)
-              ).length;
-              
+            {categories.map((category: any) => {
+              // Use backend 'posts' field if present, fallback to old logic
+              const postsCount = typeof category.posts === 'number'
+                ? category.posts
+                : (posts.filter(post => post.categories?.some(cat => cat.id === category.id)).length);
               return (
                 <tr 
                   key={category.id} 

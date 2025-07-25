@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,10 +7,11 @@ interface PostgresBlogPost {
   id: string;
   title: string;
   slug: string;
-  category: string;
+  categories?: string[];
   date: string;
   views: number;
   comments: number;
+  category_names?: string[];
 }
 
 interface BlogPostsTableProps {
@@ -59,7 +59,12 @@ const BlogPostsTable = ({
               >
                 <td className="p-4 align-middle">{post.title}</td>
                 <td className="p-4 align-middle hidden md:table-cell">
-                  {post.category}
+                  {/* Show category_names if present, else fallback to categories, else 'Uncategorized' */}
+                  {Array.isArray(post.category_names) && post.category_names.length > 0
+                    ? post.category_names.join(", ")
+                    : Array.isArray(post.categories) && post.categories.length > 0
+                    ? post.categories.join(", ")
+                    : "Uncategorized"}
                 </td>
                 <td className="p-4 align-middle hidden md:table-cell">
                   {formatDate(post.date)}

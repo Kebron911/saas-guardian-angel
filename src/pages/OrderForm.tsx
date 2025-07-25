@@ -90,18 +90,25 @@ const OrderForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Since orders table doesn't exist, we'll store this in profiles or handle differently
-      // For now, just simulate a successful submission
-      console.log("Order data:", {
-        user_id: user?.id,
-        business_name: formData.businessName,
-        industry: formData.industry,
-        plan: formData.plan,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        email: formData.email,
-        phone: formData.phone
-      });
+      // Insert order into Supabase
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([
+          {
+            user_id: user?.id, // Add user_id if user is logged in
+            business_name: formData.businessName,
+            industry: formData.industry,
+            plan: formData.plan,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            email: formData.email,
+            phone: formData.phone
+          }
+        ]);
+
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: "Order Submitted Successfully",
@@ -111,7 +118,7 @@ const OrderForm = () => {
     } catch (error) {
       toast({
         title: "Error Submitting Order",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
       console.error("Error submitting form:", error);

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import QRCode from "react-qr-code";
 import { 
   ArrowRight, 
   Calendar,
@@ -42,19 +43,14 @@ import {
   Tooltip, 
   ResponsiveContainer,
 } from "recharts";
-import { useToast } from "@/hooks/use-toast";
-
-// Place this SVG inline or use an <img src="..."> if you have the X logo as a file
-const XLogo = () => (
-  <svg viewBox="0 0 250 255" width={16} height={16} className="h-4 w-4" fill="black" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0 0 L100 0 L125 40 L150 0 L250 0 L160 127.5 L250 255 L150 255 L125 215 L100 255 L0 255 L90 127.5 Z" stroke="black" strokeWidth="16" fill="none"/>
-  </svg>
-);
 
 const AffiliateDashboard = () => {
-  const { toast } = useToast();
-  const [affiliateLink] = useState("https://ai-assistants.com/ref/john123");
+
+  const [affiliateLink] = useState("https://ai-assistants.com/ref/");
+  const vanityUrl = localStorage.getItem("affiliateVanityUrl") || "john12344";
   
+
+
   // Sample performance data
   const performanceData = [
     { month: 'Jan', clicks: 42, signups: 12, conversions: 8 },
@@ -121,7 +117,7 @@ const AffiliateDashboard = () => {
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center">
             <Input 
-              value={affiliateLink}
+              value={`${affiliateLink}${vanityUrl ? `${vanityUrl}` : ""}`}
               readOnly
               className="flex-1 mr-2"
             />
@@ -133,9 +129,20 @@ const AffiliateDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex justify-center items-center bg-gray-50 p-6 rounded-lg">
               <div className="flex flex-col items-center">
-                <QrCode className="w-24 h-24 text-[#1A237E] mb-2" />
-                <p className="text-xs text-gray-500">QR Code for your link</p>
-              </div>
+                    <div className="mb-2">
+                      <div style={{ position: "relative", display: "inline-block" }}>
+                        <QRCode
+                          value={affiliateLink}
+                          size={96}
+                          fgColor="#000000"
+                          bgColor="#fff"
+                          style={{ display: "block" }}
+                        />
+                        
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">QR Code for your link</p>
+                  </div>
             </div>
             
             <div className="flex flex-col space-y-3">
@@ -143,7 +150,7 @@ const AffiliateDashboard = () => {
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover:bg-gray-300 transition"
                   asChild
                 >
                   <a
@@ -153,13 +160,18 @@ const AffiliateDashboard = () => {
               target="_blank"
               rel="noopener noreferrer"
                   >
-              <MessageSquare className="h-4 w-4" /> WhatsApp
+                    <img
+                      src="/lovable-uploads/img/footer/WhatsApp1.png"
+                      alt="WhatsApp"
+                      className="h-6 w-6"
+                      style={{ display: 'block' }}
+                    /> WhatsApp
                   </a>
                 </Button>
                 
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover:bg-gray-300 transition"
                   asChild
                 >
                   <a
@@ -169,36 +181,39 @@ const AffiliateDashboard = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <XLogo /> Twitter
+                    <img
+                      src="/lovable-uploads/img/footer/twitterlogo.png"
+                      alt="Twitter"
+                      className="h-4 w-4"
+                      style={{ display: 'block' }}
+                    /> Twitter
                   </a>
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover:bg-gray-300 transition"
                   asChild
                 >
                   <a
                     href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(affiliateLink)}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="flex items-center gap-2"
                   >
-                    {/* You can use a Facebook SVG icon or image here */}
-                    <svg
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="#1877F3"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24H12.82v-9.294H9.692V11.01h3.127V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.696h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/>
-                    </svg>
+                    <img
+                      src="/lovable-uploads/img/footer/fb1.png"
+                      alt="Facebook"
+                      className="h-5 w-7"
+                      style={{ display: 'block' }}
+                    />
                     Facebook
                   </a>
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover:bg-gray-300 transition"
                   asChild
                 >
                   <a
@@ -206,22 +221,13 @@ const AffiliateDashboard = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {/* Gmail SVG icon */}
-                    <svg
-                      className="h-4 w-4"
-                      viewBox="0 0 48 48"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <rect width="48" height="48" rx="8" fill="#fff"/>
-                      <path d="M6 14v20a4 4 0 004 4h28a4 4 0 004-4V14a4 4 0 00-4-4H10a4 4 0 00-4 4z" fill="#EA4335"/>
-                      <path d="M42 14l-18 13L6 14" fill="#fff"/>
-                      <path d="M6 14l18 13 18-13" stroke="#EA4335" strokeWidth="2"/>
-                      <path d="M6 34V14l18 13 18-13v20a4 4 0 01-4 4H10a4 4 0 01-4-4z" fill="#34A853"/>
-                      <path d="M6 34l12-9" stroke="#4285F4" strokeWidth="2"/>
-                      <path d="M42 34l-12-9" stroke="#FBBC05" strokeWidth="2"/>
-                    </svg>
-                    Gmail
+                    <img
+                      src="/lovable-uploads/img/footer/gmail.png"
+                      alt="Gmail"
+                      className="h-4 w-13"
+                      style={{ display: 'block' }}
+                    />
+                    
                   </a>
                 </Button>
 

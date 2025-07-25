@@ -57,8 +57,18 @@ const CookiePolicy = () => {
             
             <h2 className="text-2xl font-semibold mt-8 mb-4">Contact Us</h2>
             <p>If you have any questions about our Cookie Policy, please contact us:</p>
-            <p>Email: privacy@example.com</p>
-            <p>Postal address: 123 AI Innovation Way, Tech City, CA 91234</p>
+            <p>
+              Email:{" "}
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=info@professionalaiassistants.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#1A237E] underline hover:text-[#00B8D4]"
+              >
+                info@professionalaiassistants.com
+              </a>
+            </p>
+            <p>Postal address: 8269 Iron Horse Lake Point, UT 84074</p>
           </div>
         </div>
       </LayoutContent>

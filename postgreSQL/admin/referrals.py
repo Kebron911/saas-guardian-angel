@@ -1,4 +1,3 @@
-
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from postgreSQL.database import DatabaseInterface
@@ -42,14 +41,13 @@ def get_all_affiliates(search: str = None) -> List[Dict[str, Any]]:
     """Get all affiliates from the database with optional search"""
     try:
         logger.debug("Fetching all affiliates from PostgreSQL")
-        
         # Query affiliates table with joins to get user info and stats
         query = """
         SELECT 
             a.id,
             a.user_id,
-            COALESCE(p.first_name || ' ' || p.last_name, 'Unknown User') as name,
-            COALESCE(au.email, 'No email') as email,
+            COALESCE(up.first_name || ' ' || up.last_name, 'Unknown User') as name,
+            COALESCE(up.email, 'No email') as email,
             a.referral_code,
             a.commission_rate,
             COUNT(r.id) as total_referrals,
@@ -57,13 +55,11 @@ def get_all_affiliates(search: str = None) -> List[Dict[str, Any]]:
             a.created_at,
             a.updated_at
         FROM affiliates a
-        LEFT JOIN profiles p ON a.user_id = p.id
-        LEFT JOIN auth.users au ON a.user_id = au.id
+        LEFT JOIN user_profiles up ON a.user_id = up.user_id
         LEFT JOIN referrals r ON a.id = r.affiliate_id AND r.status = 'converted'
-        GROUP BY a.id, a.user_id, p.first_name, p.last_name, au.email, a.referral_code, a.commission_rate, a.created_at, a.updated_at
+        GROUP BY a.id, a.user_id, up.first_name, up.last_name, up.email, a.referral_code, a.commission_rate, a.created_at, a.updated_at
         ORDER BY a.created_at DESC
         """
-        
         try:
             result = DatabaseInterface.execute_query(query)
         except Exception as db_error:
@@ -81,14 +77,12 @@ def get_all_affiliates(search: str = None) -> List[Dict[str, Any]]:
             ORDER BY created_at DESC
             """
             result = DatabaseInterface.execute_query(simple_query)
-            
             # Add default values for missing fields
             for row in result:
                 row['name'] = f"User {row['user_id'][:8]}"
                 row['email'] = 'email@example.com'
                 row['total_referrals'] = 0
                 row['total_earnings'] = 0
-        
         # Apply search filter if provided
         if search and result:
             search_lower = search.lower()
@@ -98,10 +92,8 @@ def get_all_affiliates(search: str = None) -> List[Dict[str, Any]]:
                    search_lower in str(aff.get("email", "")).lower() or
                    search_lower in str(aff.get("referral_code", "")).lower()
             ]
-        
         logger.debug(f"Affiliates result: {len(result)} affiliates found")
         return result
-        
     except Exception as e:
         logger.error(f"Error fetching affiliates: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -116,8 +108,8 @@ def get_all_referral_payouts(status_filter: str = None, search: str = None) -> L
         SELECT 
             rp.id,
             rp.affiliate_id,
-            COALESCE(p.first_name || ' ' || p.last_name, 'Unknown User') as affiliate_name,
-            COALESCE(au.email, 'No email') as email,
+            COALESCE(up.first_name || ' ' || up.last_name, 'Unknown User') as affiliate_name,
+            COALESCE(up.email, 'No email') as email,
             a.referral_code,
             rp.amount,
             rp.status,
@@ -128,8 +120,7 @@ def get_all_referral_payouts(status_filter: str = None, search: str = None) -> L
             rp.updated_at
         FROM referral_payouts rp
         LEFT JOIN affiliates a ON rp.affiliate_id = a.id
-        LEFT JOIN profiles p ON a.user_id = p.id
-        LEFT JOIN auth.users au ON a.user_id = au.id
+        LEFT JOIN user_profiles up ON a.user_id = up.user_id
         ORDER BY rp.created_at DESC
         """
         

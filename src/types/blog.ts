@@ -1,4 +1,3 @@
-
 export interface BlogPost {
   id: string;
   title: string;
@@ -21,7 +20,19 @@ export interface BlogCategory {
   created_at: string;
 }
 
-export interface BlogPostWithCategory extends BlogPost {
+export interface BlogPostWithCategory {
+  id: string;
+  title: string;
+  content: string;
+  excerpt?: string;
+  slug: string;
+  published: boolean;
+  published_at?: string;
+  views?: number;
+  comments?: number;
+  created_at: string;
+  updated_at: string;
+  featured_image?: string;
   categories: BlogCategory[];
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -86,7 +85,7 @@ const BlogPostForm = ({
     defaultValues,
   });
   
-  // Update form when post changes
+  // Update form when post or selectedCategoryIds changes
   useEffect(() => {
     if (post) {
       form.reset({
@@ -97,20 +96,66 @@ const BlogPostForm = ({
         published: post.published,
         featured_image: post.featured_image || "",
       });
-      
       if (post.featured_image) {
         setImagePreview(post.featured_image);
       } else {
         setImagePreview(null);
       }
-      
-      setSelectedCategories(selectedCategoryIds);
+      // Always use selectedCategoryIds if provided (edit mode)
+      if (selectedCategoryIds && selectedCategoryIds.length > 0) {
+        setSelectedCategories(selectedCategoryIds.map(String));
+      } else if (post.categories && Array.isArray(post.categories) && post.categories.length > 0) {
+        // Try to map from post.categories (array of names or objects)
+        if (typeof post.categories[0] === "object" && post.categories[0].id) {
+          setSelectedCategories(post.categories.map((cat: any) => String(cat.id)));
+        } else if (typeof post.categories[0] === "string") {
+          // Map category names to IDs using categories prop
+          const mapped = post.categories
+            .map((catName: string) => {
+              const match = categories.find((c) => c.name === catName);
+              return match ? String(match.id) : null;
+            })
+            .filter(Boolean) as string[];
+          setSelectedCategories(mapped);
+        } else {
+          setSelectedCategories([]);
+        }
+      } else {
+        setSelectedCategories([]);
+      }
     } else {
       form.reset(defaultValues);
       setImagePreview(null);
       setSelectedCategories([]);
     }
-  }, [post, form, selectedCategoryIds]);
+  }, [post, form, selectedCategoryIds, categories]);
+
+  // Always sync selectedCategories with selectedCategoryIds if they change (edit mode)
+  useEffect(() => {
+    if (post && selectedCategoryIds && selectedCategoryIds.length > 0) {
+      setSelectedCategories(selectedCategoryIds.map(String));
+    }
+  }, [selectedCategoryIds, post]);
+
+  // Initialize selected categories robustly
+  useEffect(() => {
+    if (post) {
+      // Use category_ids if present
+      if ('category_ids' in post && Array.isArray((post as any).category_ids) && (post as any).category_ids.length > 0) {
+        setSelectedCategories((post as any).category_ids.map(String));
+      } else if ('categories' in post && Array.isArray((post as any).categories) && (post as any).categories.length > 0) {
+        setSelectedCategories((post as any).categories.map((cat: any) => String(cat.id)));
+      } else if (selectedCategoryIds && selectedCategoryIds.length > 0) {
+        setSelectedCategories(selectedCategoryIds.map(String));
+      } else {
+        setSelectedCategories([]);
+      }
+    } else if (selectedCategoryIds && selectedCategoryIds.length > 0) {
+      setSelectedCategories(selectedCategoryIds.map(String));
+    } else {
+      setSelectedCategories([]);
+    }
+  }, [post, selectedCategoryIds, categories]);
 
   const handleSubmit = async (values: FormValues) => {
     try {
@@ -145,12 +190,14 @@ const BlogPostForm = ({
     }
   };
 
-  const handleCategoryToggle = (categoryId: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    );
+  // Checkbox handler: use boolean value
+  const handleCategoryToggle = (categoryId: string, checked?: boolean) => {
+    setSelectedCategories((prev) => {
+      if (checked === undefined) checked = !prev.includes(categoryId);
+      return checked
+        ? [...prev, categoryId]
+        : prev.filter((id) => id !== categoryId);
+    });
   };
 
   const generateSlug = () => {
@@ -458,6 +505,24 @@ const BlogPostForm = ({
                 )}
               />
               
+              <div className="mb-2">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Current Categories</h4>
+                {selectedCategories.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedCategories.map((catId) => {
+                      const cat = categories.find((c) => c.id === catId);
+                      return cat ? (
+                        <span key={catId} className="px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-xs">
+                          {cat.name}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">No categories selected</span>
+                )}
+              </div>
+
               <div>
                 <h3 className="text-sm font-medium mb-2">Categories</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -466,7 +531,7 @@ const BlogPostForm = ({
                       <Checkbox
                         id={`category-${category.id}`}
                         checked={selectedCategories.includes(category.id)}
-                        onCheckedChange={() => handleCategoryToggle(category.id)}
+                        onCheckedChange={(checked) => handleCategoryToggle(category.id, !!checked)}
                       />
                       <label
                         htmlFor={`category-${category.id}`}

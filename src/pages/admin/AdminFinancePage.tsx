@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -36,25 +36,27 @@ import {
 import { Label } from "@/components/ui/label";
 import { useAdminFinanceData, PromoCodeCreate } from "@/hooks/useAdminFinanceData";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { API_BASE_URL } from "@/lib/config";
+import FinanceRevenueTimelineChart from "@/components/charts/FinanceRevenueTimelineChart";
+import RevenueByPlanChart from "@/components/charts/RevenueByPlanChart";
+import { useFinanceStats } from "@/hooks/useFinanceStats";
+import { useAdminDashboardStats } from "@/hooks/useAdminDashboardStats";
+import PlanFormDialog from "@/components/admin/PlanFormDialog";
+import { updatePlan, createPlan, softDeletePlan } from "@/lib/plan-api";
 
-// Sample data for dashboard stats
-const financeStats = {
-  monthlyRevenue: 28490,
-  activeSubscriptions: 2843,
-  promoUsage: 186,
-  totalPayouts: 12480
-};
-
-const PromoCodeDialog = ({ onCreatePromoCode }: { onCreatePromoCode: (data: PromoCodeCreate) => void }) => {
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<PromoCodeCreate>({
+const PromoCodeDialog = ({ onCreatePromoCode, open, setOpen, initialData, isEdit }: { onCreatePromoCode: (data: PromoCodeCreate) => void, open: boolean, setOpen: (open: boolean) => void, initialData?: PromoCodeCreate, isEdit?: boolean }) => {
+  const [formData, setFormData] = useState<PromoCodeCreate>(initialData || {
     code: '',
     discount_percent: 0,
     expiration_date: '',
     max_uses: undefined,
     status: 'active'
   });
+
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,17 +73,19 @@ const PromoCodeDialog = ({ onCreatePromoCode }: { onCreatePromoCode: (data: Prom
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Promo Code
-        </Button>
-      </DialogTrigger>
+      {!isEdit && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Promo Code
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Promo Code</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit' : 'Create New'} Promo Code</DialogTitle>
           <DialogDescription>
-            Add a new promotional code to your system.
+            {isEdit ? 'Update the details of the promo code.' : 'Add a new promotional code to your system.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -155,7 +159,7 @@ const PromoCodeDialog = ({ onCreatePromoCode }: { onCreatePromoCode: (data: Prom
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Create Promo Code</Button>
+            <Button type="submit">{isEdit ? 'Update' : 'Create'} Promo Code</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -164,51 +168,30 @@ const PromoCodeDialog = ({ onCreatePromoCode }: { onCreatePromoCode: (data: Prom
 };
 
 const FinanceDashboardTab = () => {
-  const [monthlyRevenue, setMonthlyRevenue] = useState<number | null>(null);
-  const [percentChange, setPercentChange] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch monthly revenue and percent change from backend
-    const fetchFinanceStats = async () => {
-      setLoading(true);
-      try {
-        // Backend endpoint should return { revenue: number, change_pct: number }
-        const res = await fetch(`${API_BASE_URL}/analytics/monthly-revenue`);
-        const data = await res.json();
-        setMonthlyRevenue(data.revenue);
-        setPercentChange(data.change_pct);
-      } catch (err) {
-        setMonthlyRevenue(null);
-        setPercentChange(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFinanceStats();
-  }, []);
+  const { stats: financeStats, isLoading: statsLoading, error: statsError } = useAdminDashboardStats();
+  const { stats, isLoading, error } = useFinanceStats();
 
   return (
-    <>
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Monthly Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center">
-              <DollarSign className="w-8 h-8 mr-3 text-green-600" />
-              <div className="text-3xl font-bold">
-                {loading || monthlyRevenue === null
-                  ? "..."
-                  : `$${monthlyRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              </div>
-            </div>
-            <div className={`mt-2 text-sm ${percentChange && percentChange > 0 ? "text-green-600" : "text-gray-500"}`}>
-              {loading || percentChange === null
-                ? "..."
-                : `${percentChange > 0 ? "+" : ""}${percentChange}% from last month`}
-            </div>
+            {isLoading ? (
+              <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+            ) : error ? (
+              <div className="text-red-500">{error}</div>
+            ) : stats ? (
+              <>
+                <div className="flex items-center">
+                  <DollarSign className="w-8 h-8 mr-3 text-green-600" />
+                  <div className="text-3xl font-bold">${stats.monthly_revenue.toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+                </div>
+                <div className={`mt-2 text-sm ${stats.percent_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>{stats.percent_change >= 0 ? '+' : ''}{stats.percent_change.toFixed(1)}% from last month</div>
+              </>
+            ) : null}
           </CardContent>
         </Card>
         
@@ -217,11 +200,24 @@ const FinanceDashboardTab = () => {
             <CardTitle className="text-lg">Active Subscriptions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center">
-              <Users className="w-8 h-8 mr-3 text-blue-600" />
-              <div className="text-3xl font-bold">{financeStats.activeSubscriptions.toLocaleString()}</div>
-            </div>
-            <div className="mt-2 text-sm text-blue-600">+12 new today</div>
+            {statsLoading ? (
+              <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+            ) : statsError ? (
+              <div className="text-red-500">{statsError}</div>
+            ) : financeStats ? (
+              <>
+                <div className="flex items-center">
+                  <Users className="w-8 h-8 mr-3 text-blue-600" />
+                  <div className="text-3xl font-bold">{financeStats.active_subscriptions.toLocaleString()}</div>
+                </div>
+                <div className="mt-2 text-xs text-blue-700 flex flex-wrap gap-2">
+                  <span>+{financeStats.active_subscriptions_breakdown.today} today</span>
+                  <span>+{financeStats.active_subscriptions_breakdown.week} week</span>
+                  <span>+{financeStats.active_subscriptions_breakdown.month} month</span>
+                  <span>+{financeStats.active_subscriptions_breakdown.year} year</span>
+                </div>
+              </>
+            ) : null}
           </CardContent>
         </Card>
         
@@ -230,11 +226,24 @@ const FinanceDashboardTab = () => {
             <CardTitle className="text-lg">Promo Usage</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center">
-              <Tag className="w-8 h-8 mr-3 text-purple-600" />
-              <div className="text-3xl font-bold">{financeStats.promoUsage.toLocaleString()}</div>
-            </div>
-            <div className="mt-2 text-sm text-gray-500">This month</div>
+            {statsLoading ? (
+              <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+            ) : statsError ? (
+              <div className="text-red-500">{statsError}</div>
+            ) : financeStats ? (
+              <>
+                <div className="flex items-center">
+                  <Tag className="w-8 h-8 mr-3 text-purple-600" />
+                  <div className="text-3xl font-bold">{financeStats.promo_usage.toLocaleString()}</div>
+                </div>
+                <div className="mt-2 text-xs text-purple-700 flex flex-wrap gap-2">
+                  <span>+{financeStats.promo_usage_breakdown.today} today</span>
+                  <span>+{financeStats.promo_usage_breakdown.week} week</span>
+                  <span>+{financeStats.promo_usage_breakdown.month} month</span>
+                  <span>+{financeStats.promo_usage_breakdown.year} year</span>
+                </div>
+              </>
+            ) : null}
           </CardContent>
         </Card>
         
@@ -243,10 +252,16 @@ const FinanceDashboardTab = () => {
             <CardTitle className="text-lg">Total Payouts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center">
-              <DollarSign className="w-8 h-8 mr-3 text-amber-600" />
-              <div className="text-3xl font-bold">${financeStats.totalPayouts.toLocaleString()}</div>
-            </div>
+            {statsLoading ? (
+              <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+            ) : statsError ? (
+              <div className="text-red-500">{statsError}</div>
+            ) : financeStats ? (
+              <div className="flex items-center">
+                <DollarSign className="w-8 h-8 mr-3 text-amber-600" />
+                <div className="text-3xl font-bold">${financeStats.commissions_paid.toLocaleString()}</div>
+              </div>
+            ) : null}
             <div className="mt-2 text-sm text-gray-500">Affiliate commissions</div>
           </CardContent>
         </Card>
@@ -258,10 +273,7 @@ const FinanceDashboardTab = () => {
             <CardTitle>Revenue Timeline</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <BarChart3 className="mx-auto h-16 w-16 opacity-50" />
-              <p className="mt-2">Revenue trends chart will appear here</p>
-            </div>
+            <FinanceRevenueTimelineChart />
           </CardContent>
         </Card>
         
@@ -270,14 +282,11 @@ const FinanceDashboardTab = () => {
             <CardTitle>Revenue by Plan</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <BarChart3 className="mx-auto h-16 w-16 opacity-50" />
-              <p className="mt-2">Plan distribution chart will appear here</p>
-            </div>
+            <RevenueByPlanChart />
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -286,6 +295,10 @@ const TransactionsTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all-types");
   const [statusFilter, setStatusFilter] = useState("all-status");
+
+  // Compute unique types and statuses from transactions
+  const typeOptions = Array.from(new Set(transactions.map(t => t.type))).filter(Boolean);
+  const statusOptions = Array.from(new Set(transactions.map(t => t.status))).filter(Boolean);
 
   const handleSearch = () => {
     fetchTransactions(searchTerm, typeFilter, statusFilter);
@@ -316,9 +329,9 @@ const TransactionsTab = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-types">All Types</SelectItem>
-              <SelectItem value="subscription">Subscription</SelectItem>
-              <SelectItem value="upgrade">Upgrade</SelectItem>
-              <SelectItem value="refund">Refund</SelectItem>
+              {typeOptions.map(type => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           
@@ -328,9 +341,9 @@ const TransactionsTab = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-status">All Status</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              {statusOptions.map(status => (
+                <SelectItem key={status} value={status}>{status}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           
@@ -407,9 +420,34 @@ const PlansTab = () => {
   const { plans, fetchPlans, isLoading } = useAdminFinanceData();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all-status");
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const handleSearch = () => {
     fetchPlans(searchTerm, statusFilter);
+  };
+
+  const handleEdit = (plan) => {
+    setEditingPlan(plan);
+    setEditDialogOpen(true);
+  };
+
+  const handleSave = async (data) => {
+    if (editingPlan) {
+      await updatePlan(editingPlan.id, data);
+      setEditingPlan(null);
+      setEditDialogOpen(false);
+    } else {
+      await createPlan(data);
+      setCreating(false);
+    }
+    fetchPlans();
+  };
+
+  const handleDelete = async (planId) => {
+    await softDeletePlan(planId);
+    fetchPlans();
   };
 
   if (isLoading) {
@@ -446,18 +484,21 @@ const PlansTab = () => {
             <Search className="mr-2 h-4 w-4" />
             Search
           </Button>
-          
-          <Button variant="outline">
-            <Star className="mr-2 h-4 w-4" />
-            Set Default Plan
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create New Plan
-          </Button>
+          {/* Create New Plan Button */}
+          <PlanFormDialog
+            trigger={
+              <Button onClick={() => { setEditingPlan(null); setEditDialogOpen(true); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create New Plan
+              </Button>
+            }
+            plan={null}
+            onSave={handleSave}
+            open={editDialogOpen && !editingPlan}
+            setOpen={setEditDialogOpen}
+          />
         </div>
       </div>
-      
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -487,11 +528,19 @@ const PlansTab = () => {
                   <td className="px-4 py-3 text-sm">{plan.subscriber_count}</td>
                   <td className="px-4 py-3 text-sm text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button variant="ghost" size="icon">
+                      <PlanFormDialog
+                        trigger={
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingPlan(plan); setEditDialogOpen(true); }}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        }
+                        plan={editingPlan && editingPlan.id === plan.id ? editingPlan : null}
+                        onSave={handleSave}
+                        open={editDialogOpen && editingPlan && editingPlan.id === plan.id}
+                        setOpen={setEditDialogOpen}
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(plan.id)}>
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
                       </Button>
@@ -632,9 +681,11 @@ const SubscriptionsTab = () => {
 };
 
 const PromoCodesTab = () => {
-  const { promoCodes, fetchPromoCodes, createPromoCode, isLoading } = useAdminFinanceData();
+  const { promoCodes, fetchPromoCodes, createPromoCode, softDeletePromoCode, isLoading } = useAdminFinanceData();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all-status");
+  const [editingPromo, setEditingPromo] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleSearch = () => {
     fetchPromoCodes(searchTerm, statusFilter);
@@ -645,6 +696,23 @@ const PromoCodesTab = () => {
       await createPromoCode(data);
     } catch (error) {
       console.error("Failed to create promo code:", error);
+    }
+  };
+
+  const handleEditPromoCode = (promo) => {
+    setEditingPromo(promo);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEditPromoCode = async (data) => {
+    try {
+      // PATCH or PUT to /admin/promo-codes/{id} (implement if not present)
+      await apiClient.put(`/admin/promo-codes/${editingPromo.id}`, data);
+      setEditDialogOpen(false);
+      setEditingPromo(null);
+      await fetchPromoCodes();
+    } catch (error) {
+      console.error("Failed to update promo code:", error);
     }
   };
 
@@ -684,7 +752,14 @@ const PromoCodesTab = () => {
             Search
           </Button>
           
-          <PromoCodeDialog onCreatePromoCode={handleCreatePromoCode} />
+          {/* Create New Promo Code Button */}
+          <PromoCodeDialog
+            onCreatePromoCode={handleCreatePromoCode}
+            open={editDialogOpen}
+            setOpen={setEditDialogOpen}
+            initialData={editingPromo}
+            isEdit={!!editingPromo}
+          />
         </div>
       </div>
       
@@ -696,7 +771,7 @@ const PromoCodesTab = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Code</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Discount %</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Expiration</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Usage Count</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Usage</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Max Uses</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
@@ -707,9 +782,7 @@ const PromoCodesTab = () => {
                 <tr key={promo.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium">{promo.code}</td>
                   <td className="px-4 py-3 text-sm">{promo.discount_percent}%</td>
-                  <td className="px-4 py-3 text-sm">
-                    {promo.expiration_date ? new Date(promo.expiration_date).toLocaleDateString() : 'Never'}
-                  </td>
+                  <td className="px-4 py-3 text-sm">{promo.expiration_date ? new Date(promo.expiration_date).toLocaleDateString() : 'Never'}</td>
                   <td className="px-4 py-3 text-sm">{promo.usage_count}</td>
                   <td className="px-4 py-3 text-sm">{promo.max_uses || 'Unlimited'}</td>
                   <td className="px-4 py-3 text-sm">
@@ -723,11 +796,15 @@ const PromoCodesTab = () => {
                   </td>
                   <td className="px-4 py-3 text-sm text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditPromoCode(promo)}>
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={async () => {
+                        try {
+                          await softDeletePromoCode(promo.id);
+                        } catch {}
+                      }}>
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
                       </Button>
@@ -749,6 +826,59 @@ const PromoCodesTab = () => {
 };
 
 const FinanceSettingsTab = () => {
+  const [defaultCurrency, setDefaultCurrency] = useState("usd");
+  const [currencyFormat, setCurrencyFormat] = useState("before");
+  const [stripeApiKey, setStripeApiKey] = useState("");
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [paypalClientId, setPaypalClientId] = useState("");
+  const [paypalSecret, setPaypalSecret] = useState("");
+  const [minPayout, setMinPayout] = useState(50);
+  const [autoPayouts, setAutoPayouts] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiClient.get("/admin/finance-settings");
+        setDefaultCurrency(data.default_currency ?? "usd");
+        setCurrencyFormat(data.currency_format ?? "before");
+        setStripeApiKey(data.stripe_api_key ?? "");
+        setStripeSecretKey(data.stripe_secret_key ?? "");
+        setPaypalClientId(data.paypal_client_id ?? "");
+        setPaypalSecret(data.paypal_secret ?? "");
+        setMinPayout(data.min_payout ?? 50);
+        setAutoPayouts(data.auto_payouts ?? true);
+      } catch (e) {
+        // ignore, use defaults
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveSuccess(false);
+    setSaveError("");
+    try {
+      await apiClient.post("/admin/finance-settings", {
+        default_currency: defaultCurrency,
+        currency_format: currencyFormat,
+        stripe_api_key: stripeApiKey,
+        stripe_secret_key: stripeSecretKey,
+        paypal_client_id: paypalClientId,
+        paypal_secret: paypalSecret,
+        min_payout: minPayout,
+        auto_payouts: autoPayouts,
+      });
+      setSaveSuccess(true);
+    } catch (e) {
+      setSaveError(e.detail || "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -759,7 +889,7 @@ const FinanceSettingsTab = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label htmlFor="default-currency" className="text-sm font-medium">Default Currency</label>
-              <Select defaultValue="usd">
+              <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
                 <SelectTrigger id="default-currency">
                   <SelectValue placeholder="Select Currency" />
                 </SelectTrigger>
@@ -772,10 +902,9 @@ const FinanceSettingsTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="currency-format" className="text-sm font-medium">Currency Format</label>
-              <Select defaultValue="before">
+              <Select value={currencyFormat} onValueChange={setCurrencyFormat}>
                 <SelectTrigger id="currency-format">
                   <SelectValue placeholder="Select Format" />
                 </SelectTrigger>
@@ -799,19 +928,19 @@ const FinanceSettingsTab = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">Stripe</h3>
                 <div className="flex items-center">
-                  <span className="text-sm text-green-600 font-medium mr-2">Connected</span>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <span className="text-sm text-green-600 font-medium mr-2">{stripeApiKey && stripeSecretKey ? "Connected" : "Not Connected"}</span>
+                  <div className={`h-3 w-3 rounded-full ${stripeApiKey && stripeSecretKey ? "bg-green-500" : "bg-gray-400"}`}></div>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="stripe-api-key" className="text-sm font-medium">API Key</label>
-                  <Input id="stripe-api-key" type="password" value="pk_test_●●●●●●●●●●●●●●●●" />
+                  <Input id="stripe-api-key" type="password" value={stripeApiKey} onChange={e => setStripeApiKey(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="stripe-secret-key" className="text-sm font-medium">Secret Key</label>
-                  <Input id="stripe-secret-key" type="password" value="sk_test_●●●●●●●●●●●●●●●●" />
+                  <Input id="stripe-secret-key" type="password" value={stripeSecretKey} onChange={e => setStripeSecretKey(e.target.value)} />
                 </div>
               </div>
             </div>
@@ -820,19 +949,19 @@ const FinanceSettingsTab = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">PayPal</h3>
                 <div className="flex items-center">
-                  <span className="text-sm text-green-600 font-medium mr-2">Connected</span>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <span className="text-sm text-green-600 font-medium mr-2">{paypalClientId && paypalSecret ? "Connected" : "Not Connected"}</span>
+                  <div className={`h-3 w-3 rounded-full ${paypalClientId && paypalSecret ? "bg-green-500" : "bg-gray-400"}`}></div>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="paypal-client-id" className="text-sm font-medium">Client ID</label>
-                  <Input id="paypal-client-id" type="password" value="client_id_●●●●●●●●●●●●●●" />
+                  <Input id="paypal-client-id" type="password" value={paypalClientId} onChange={e => setPaypalClientId(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="paypal-secret" className="text-sm font-medium">Client Secret</label>
-                  <Input id="paypal-secret" type="password" value="client_secret_●●●●●●●●●●●●" />
+                  <Input id="paypal-secret" type="password" value={paypalSecret} onChange={e => setPaypalSecret(e.target.value)} />
                 </div>
               </div>
             </div>
@@ -850,14 +979,13 @@ const FinanceSettingsTab = () => {
               <label htmlFor="min-payout" className="text-sm font-medium">Minimum Payout Threshold</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
-                <Input id="min-payout" type="number" className="pl-7" defaultValue="50" />
+                <Input id="min-payout" type="number" className="pl-7" value={minPayout} onChange={e => setMinPayout(Number(e.target.value))} />
               </div>
               <p className="text-xs text-gray-500">Minimum amount required before automatic payouts are processed</p>
             </div>
-            
             <div className="space-y-2 pt-7">
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="auto-payouts" className="h-4 w-4 rounded border-gray-300" defaultChecked />
+                <input type="checkbox" id="auto-payouts" className="h-4 w-4 rounded border-gray-300" checked={autoPayouts} onChange={e => setAutoPayouts(e.target.checked)} />
                 <label htmlFor="auto-payouts" className="text-sm font-medium">Enable automatic payouts</label>
               </div>
               <p className="text-xs text-gray-500">When enabled, payouts will be processed automatically at the end of each month</p>
@@ -865,6 +993,11 @@ const FinanceSettingsTab = () => {
           </div>
         </CardContent>
       </Card>
+      <div className="flex flex-col items-end gap-2">
+        <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
+        {saveSuccess && <span className="text-green-600 text-sm">Settings saved!</span>}
+        {saveError && <span className="text-red-600 text-sm">{saveError}</span>}
+      </div>
     </div>
   );
 };

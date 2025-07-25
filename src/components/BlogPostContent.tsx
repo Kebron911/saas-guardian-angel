@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useSingleBlogPost } from "@/hooks/useBlogPageData";
 import { format } from "date-fns";
 import { BlogPostWithCategory } from "@/types/blog";
+import BlogComments from "@/components/BlogComments";
 
 interface BlogPostContentProps {
   slug?: string;
@@ -55,14 +56,6 @@ const BlogPostContent = ({ slug }: BlogPostContentProps) => {
         {post.title}
       </h1>
 
-      <div className="author-info flex items-center mb-8">
-        <img src="/api/placeholder/40/40" alt="Author" className="w-10 h-10 rounded-full mr-4" />
-        <div>
-          <h3 className="font-semibold text-[#1A237E]">Admin User</h3>
-          <span className="text-sm text-[#777]">AI Implementation Specialist</span>
-        </div>
-      </div>
-
       <div className="featured-image mb-8 rounded-lg overflow-hidden">
         {post.featured_image ? (
           <img 
@@ -102,14 +95,14 @@ const BlogPostContent = ({ slug }: BlogPostContentProps) => {
       <div className="post-footer mt-12 pt-8 border-t border-gray-200">
         <div className="flex justify-between items-center">
           <div className="flex gap-6">
-            <button className="flex items-center gap-2 text-[#777] hover:text-[#00B8D4]">
+            <div className="flex items-center gap-2 text-[#777] hover:text-[#00B8D4]">
               <Heart className="w-5 h-5" />
               <span>{post.views || 0} Views</span>
-            </button>
-            <button className="flex items-center gap-2 text-[#777] hover:text-[#00B8D4]">
+            </div>
+            <div className="flex items-center gap-2 text-[#777] hover:text-[#00B8D4]">
               <MessageSquare className="w-5 h-5" />
-              <span>Comments</span>
-            </button>
+              <span>{post.comments || 0} Comments</span>
+            </div>
           </div>
           <button className="flex items-center gap-2 text-[#777] hover:text-[#00B8D4]">
             <Share className="w-5 h-5" />
@@ -117,6 +110,9 @@ const BlogPostContent = ({ slug }: BlogPostContentProps) => {
           </button>
         </div>
       </div>
+
+      {/* Blog Comments Section */}
+      <BlogComments postId={post.id} />
     </article>
   );
 };

@@ -30,7 +30,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const menuItems = [
-    { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/admin" },
     { icon: <Phone size={18} />, label: "Receptionist Setup", path: "/dashboard/setup" },
     { icon: <BarChart2 size={18} />, label: "Reports", path: "/dashboard/reports" },
     { icon: <CreditCard size={18} />, label: "Billing", path: "/dashboard/billing" },

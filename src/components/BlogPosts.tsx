@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { useBlogPageData } from "@/hooks/useBlogPageData";
@@ -6,6 +5,7 @@ import { format } from "date-fns";
 import { BlogPostWithCategory } from "@/types/blog";
 import { RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDisplayImageUrl } from "@/utils/imageUtils"; // Adjust the import path as necessary
 
 const BlogPosts = () => {
   const { posts, isLoading, error } = useBlogPageData();
@@ -16,11 +16,11 @@ const BlogPosts = () => {
     window.location.reload();
   };
    // Add at the top of your component, after other hooks:
-      const POSTS_PER_PAGE = 6; // Change this number as needed
+      const POSTS_PER_PAGE = 3; // Show 3 posts per page in the column
       const [currentPage, setCurrentPage] = React.useState(1);
       const blogGridRef = React.useRef<HTMLDivElement>(null);
 
-       // First post is featured
+      // First post is featured
       const featuredPost = posts[0] as BlogPostWithCategory;
       const regularPosts = posts.slice(1) as BlogPostWithCategory[];
 
@@ -98,9 +98,13 @@ const BlogPosts = () => {
             <div className="featured-image h-[250px] md:h-[400px] bg-gray-100 flex items-center justify-center overflow-hidden">
               {featuredPost.featured_image ? (
                 <img 
-                  src={featuredPost.featured_image} 
+                  src={getDisplayImageUrl(featuredPost.featured_image)} 
                   alt={featuredPost.title} 
                   className="object-cover w-full h-full" 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -128,71 +132,122 @@ const BlogPosts = () => {
         </div>
       )}
 
-     
-
-      {/* Blog Posts Grid */}
+      {/* Blog Posts Row */}
       {regularPosts.length > 0 ? (
-  <>
-    <div className="blog-posts grid grid-cols-1 md:grid-cols-3 gap-8">
-      {paginatedPosts.map(post => (
-        <Link 
-          key={post.id}
-          to={`/blog/${post.slug}`} 
-          className="blog-card bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1"
-        >
-          {/* ...existing card code... */}
-          <div className="blog-image h-[200px] bg-gray-100 flex items-center justify-center">
-            {post.featured_image ? (
-              <img 
-                src={post.featured_image} 
-                alt={post.title} 
-                className="object-cover w-full h-full" 
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-400">No image available</span>
-              </div>
-            )}
+        <>
+          <div ref={blogGridRef} className="blog-posts grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {paginatedPosts.map(post => (
+              <Link 
+                key={post.id}
+                to={`/blog/${post.slug}`} 
+                className="blog-card bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:-translate-y-1 flex flex-col"
+              >
+                <div className="blog-image h-[200px] bg-gray-100 flex items-center justify-center">
+                  {post.featured_image ? (
+                    <img 
+                      src={getDisplayImageUrl(post.featured_image)} 
+                      alt={post.title + " featured image"}
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={getDisplayImageUrl("")}
+                      alt="No featured image"
+                      className="object-cover w-full h-full"
+                    />
+                  )}
+                </div>
+                <div className="blog-content p-6 flex-1 flex flex-col">
+                  <div className="post-meta flex items-center mb-3 text-[#777] text-sm">
+                    {post.categories && post.categories.length > 0 && (
+                      <span className="category bg-[#FFF9C4] text-[#1A237E] font-semibold px-3 py-1 rounded mr-3">
+                        {post.categories[0].name}
+                      </span>
+                    )}
+                    <span>{formatDate(post.published_at)}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#1A237E] mb-2">{post.title}</h3>
+                  <p className="mb-4 text-[#555]">{post.excerpt}</p>
+                  <span className="read-more text-[#00B8D4] font-semibold inline-flex items-center mt-auto">
+                    Read more
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="ml-2"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="#00B8D4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
-          <div className="blog-content p-6">
-            <div className="post-meta flex items-center mb-3 text-[#777] text-sm">
-              {post.categories && post.categories.length > 0 && (
-                <span className="category bg-[#FFF9C4] text-[#1A237E] font-semibold px-3 py-1 rounded mr-3">
-                  {post.categories[0].name}
-                </span>
-              )}
-              <span>{formatDate(post.published_at)}</span>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8 space-x-2">
+              {/* Previous button */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded bg-gray-200 text-[#1A237E] hover:bg-[#00B8D4] hover:text-white disabled:opacity-50"
+              >
+                &lt;&lt; Previous
+              </button>
+              {/* Page numbers with ellipsis */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(pageNum => {
+                  if (totalPages <= 5) return true;
+                  if (currentPage <= 3) return pageNum <= 5;
+                  if (currentPage >= totalPages - 2) return pageNum > totalPages - 5;
+                  return (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    Math.abs(pageNum - currentPage) <= 2
+                  );
+                })
+                .map((pageNum, idx, arr) => {
+                  // Add ellipsis if needed
+                  const prevPage = arr[idx - 1];
+                  if (prevPage && pageNum - prevPage > 1) {
+                    return [
+                      <span key={`ellipsis-${pageNum}`} className="px-2">...</span>,
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-4 py-2 rounded ${
+                          currentPage === pageNum
+                            ? "bg-[#1A237E] text-white"
+                            : "bg-gray-200 text-[#1A237E] hover:bg-[#00B8D4] hover:text-white "
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ];
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-4 py-2 rounded ${
+                        currentPage === pageNum
+                          ? "bg-[#1A237E] text-white"
+                          : "bg-gray-200 text-[#1A237E] hover:bg-[#00B8D4] hover:text-white "
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              {/* Next button */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded bg-gray-200 text-[#1A237E] hover:bg-[#00B8D4] hover:text-white disabled:opacity-50"
+              >
+                Next &gt;&gt;
+              </button>
             </div>
-            <h3 className="text-xl font-bold text-[#1A237E] mb-2">{post.title}</h3>
-            <p className="mb-4 text-[#555]">{post.excerpt}</p>
-            <span className="read-more text-[#00B8D4] font-semibold inline-flex items-center">
-              Read more
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="ml-2"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="#00B8D4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
-          </div>
-        </Link>
-      ))}
-    </div>
-    {/* Pagination Controls */}
-    {totalPages > 1 && (
-      <div className="flex justify-center mt-8 space-x-2">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            onClick={() => handlePageChange(i + 1)}
-            className={`px-4 py-2 rounded mb-4 ${
-              currentPage === i + 1
-                ? "bg-[#1A237E] text-white"
-                : "bg-gray-200 text-[#1A237E] hover:bg-[#00B8D4] hover:text-white "
-            }`}
-          >
-            {i + 1}
-          </button>
-        ))}
-      </div>
-    )}
-  </>
-) : null}
+          )}
+        </>
+      ) : null}
     </main>
   );
 };

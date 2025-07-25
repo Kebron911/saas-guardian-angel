@@ -14,6 +14,60 @@ import {
 import { Send } from "lucide-react";
 
 const GlobalSettingsTab = () => {
+  const [appName, setAppName] = React.useState("Professional AI Assistants");
+  const [companyName, setCompanyName] = React.useState("AI Assistants, Inc.");
+  const [contactEmail, setContactEmail] = React.useState("contact@aiassistants.com");
+  const [websiteUrl, setWebsiteUrl] = React.useState("https://aiassistants.com");
+  const [defaultLanguage, setDefaultLanguage] = React.useState("en-US");
+  const [timezone, setTimezone] = React.useState("America/New_York");
+  const [appEnvironment, setAppEnvironment] = React.useState("production");
+  const [defaultRole, setDefaultRole] = React.useState("user");
+  const [maintenanceMode, setMaintenanceMode] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [saveError, setSaveError] = React.useState("");
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiClient.get("/admin/global-settings");
+        setAppName(data.app_name ?? "Professional AI Assistants");
+        setCompanyName(data.company_name ?? "AI Assistants, Inc.");
+        setContactEmail(data.contact_email ?? "contact@aiassistants.com");
+        setWebsiteUrl(data.website_url ?? "https://aiassistants.com");
+        setDefaultLanguage(data.default_language ?? "en-US");
+        setTimezone(data.timezone ?? "America/New_York");
+        setAppEnvironment(data.app_environment ?? "production");
+        setDefaultRole(data.default_role ?? "user");
+        setMaintenanceMode(!!data.maintenance_mode);
+      } catch (e) {}
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveSuccess(false);
+    setSaveError("");
+    try {
+      await apiClient.post("/admin/global-settings", {
+        app_name: appName,
+        company_name: companyName,
+        contact_email: contactEmail,
+        website_url: websiteUrl,
+        default_language: defaultLanguage,
+        timezone: timezone,
+        app_environment: appEnvironment,
+        default_role: defaultRole,
+        maintenance_mode: maintenanceMode,
+      });
+      setSaveSuccess(true);
+    } catch (e) {
+      setSaveError(e.detail || "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -24,29 +78,25 @@ const GlobalSettingsTab = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="app-name" className="text-sm font-medium">App Name</label>
-              <Input id="app-name" defaultValue="Professional AI Assistants" />
+              <Input id="app-name" value={appName} onChange={e => setAppName(e.target.value)} />
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="company-name" className="text-sm font-medium">Company Name</label>
-              <Input id="company-name" defaultValue="AI Assistants, Inc." />
+              <Input id="company-name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="contact-email" className="text-sm font-medium">Contact Email</label>
-              <Input id="contact-email" type="email" defaultValue="contact@aiassistants.com" />
+              <Input id="contact-email" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} />
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="website-url" className="text-sm font-medium">Website URL</label>
-              <Input id="website-url" defaultValue="https://aiassistants.com" />
+              <Input id="website-url" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} />
             </div>
           </div>
-          
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="default-language" className="text-sm font-medium">Default Language</label>
-              <Select defaultValue="en-US">
+              <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
                 <SelectTrigger id="default-language">
                   <SelectValue placeholder="Select Language" />
                 </SelectTrigger>
@@ -59,10 +109,9 @@ const GlobalSettingsTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="timezone" className="text-sm font-medium">Timezone</label>
-              <Select defaultValue="America/New_York">
+              <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger id="timezone">
                   <SelectValue placeholder="Select Timezone" />
                 </SelectTrigger>
@@ -77,10 +126,9 @@ const GlobalSettingsTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="app-environment" className="text-sm font-medium">App Environment</label>
-              <Select defaultValue="production">
+              <Select value={appEnvironment} onValueChange={setAppEnvironment}>
                 <SelectTrigger id="app-environment">
                   <SelectValue placeholder="Select Environment" />
                 </SelectTrigger>
@@ -91,10 +139,9 @@ const GlobalSettingsTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-2">
               <label htmlFor="default-role" className="text-sm font-medium">Default Signup Role</label>
-              <Select defaultValue="user">
+              <Select value={defaultRole} onValueChange={setDefaultRole}>
                 <SelectTrigger id="default-role">
                   <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
@@ -104,19 +151,19 @@ const GlobalSettingsTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-2 pt-2">
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="maintenance-mode" className="h-4 w-4 rounded border-gray-300" />
+                <input type="checkbox" id="maintenance-mode" className="h-4 w-4 rounded border-gray-300" checked={maintenanceMode} onChange={e => setMaintenanceMode(e.target.checked)} />
                 <label htmlFor="maintenance-mode" className="text-sm font-medium">Maintenance Mode</label>
               </div>
               <p className="text-xs text-gray-500">When enabled, only administrators can access the site</p>
             </div>
           </div>
         </div>
-        
-        <div className="mt-6 flex justify-end">
-          <Button>Save Settings</Button>
+        <div className="mt-6 flex flex-col items-end gap-2">
+          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
+          {saveSuccess && <span className="text-green-600 text-sm">Settings saved!</span>}
+          {saveError && <span className="text-red-600 text-sm">{saveError}</span>}
         </div>
       </CardContent>
     </Card>

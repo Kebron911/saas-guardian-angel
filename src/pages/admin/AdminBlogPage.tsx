@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Tag, RefreshCw, Filter, ArrowUpDown } from "lucide-react";
 import { usePostgresBlogData } from "@/hooks/usePostgresBlogData";
+import { usePostgresCategories } from "@/hooks/usePostgresBlogData";
 import { useBlogData } from "@/hooks/useBlogData";
 import BlogPostForm from "@/components/admin/BlogPostForm";
 import BlogCategoryForm from "@/components/admin/BlogCategoryForm";
@@ -30,6 +31,9 @@ import {
 import BlogPostsTable from "@/components/admin/BlogPostsTable";
 import BlogCategoriesTable from "@/components/admin/BlogCategoriesTable";
 import BlogSampleCreator from "@/components/admin/BlogSampleCreator";
+import { apiClient } from "@/lib/api-client";
+import { toast } from "@/hooks/use-toast";
+import { updateBlogCategory, deleteBlogCategory, createBlogCategory } from "@/services/blogCategoryService";
 
 const AdminBlogPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +45,7 @@ const AdminBlogPage = () => {
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: "post" | "category" } | null>(null);
   const [currentTab, setCurrentTab] = useState("published");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isEditLoading, setIsEditLoading] = useState(false);
   
   // Filter and sort states
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -54,21 +59,12 @@ const AdminBlogPage = () => {
     isLoading: postsLoading, 
     error: postsError,
     fetchPosts,
+    fetchPostById,
     deletePost
   } = usePostgresBlogData();
-  
-  // Supabase data for categories (keeping existing functionality)
-  const { 
-    categories, 
-    isLoading: categoriesLoading, 
-    error: categoriesError,
-    createPost, 
-    updatePost,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    fetchPosts: fetchSupabasePosts
-  } = useBlogData();
+
+  // PostgreSQL data for categories
+  const { categories, isLoading: categoriesLoading, error: categoriesError, fetchCategories } = usePostgresCategories();
   
   const isLoading = postsLoading || categoriesLoading;
   const error = postsError || categoriesError;
@@ -77,11 +73,11 @@ const AdminBlogPage = () => {
   const filterAndSortPosts = (posts: any[]) => {
     let filtered = posts.filter(post => 
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      (Array.isArray(post.category_names) && post.category_names.some((cat: string) => cat.toLowerCase().includes(searchQuery.toLowerCase())))
     );
 
     if (categoryFilter !== "all") {
-      filtered = filtered.filter(post => post.category === categoryFilter);
+      filtered = filtered.filter(post => Array.isArray(post.category_names) && post.category_names.includes(categoryFilter));
     }
 
     return filtered.sort((a, b) => {
@@ -93,8 +89,8 @@ const AdminBlogPage = () => {
           bValue = b.title.toLowerCase();
           break;
         case "category":
-          aValue = a.category?.toLowerCase() || "";
-          bValue = b.category?.toLowerCase() || "";
+          aValue = (a.category_names && a.category_names[0]) ? a.category_names[0].toLowerCase() : "";
+          bValue = (b.category_names && b.category_names[0]) ? b.category_names[0].toLowerCase() : "";
           break;
         case "views":
           aValue = a.views || 0;
@@ -120,7 +116,7 @@ const AdminBlogPage = () => {
   };
 
   const getUniqueCategories = (posts: any[]) => {
-    const categories = [...new Set(posts.map(post => post.category).filter(Boolean))];
+    const categories = [...new Set(posts.flatMap(post => post.category_names || []))];
     return categories.sort();
   };
   
@@ -129,8 +125,11 @@ const AdminBlogPage = () => {
     setIsPostFormOpen(true);
   };
   
-  const handleEditPost = (post: any) => {
-    setSelectedPost(post);
+  const handleEditPost = async (post: any) => {
+    setIsEditLoading(true);
+    const fullPost = await fetchPostById(post.id);
+    setSelectedPost(fullPost || post);
+    setIsEditLoading(false);
     setIsPostFormOpen(true);
   };
   
@@ -160,17 +159,17 @@ const AdminBlogPage = () => {
   
   const confirmDelete = async () => {
     if (!itemToDelete) return;
-    
     try {
       if (itemToDelete.type === "post") {
         await deletePost(itemToDelete.id);
+        await fetchPosts();
       } else {
-        await deleteCategory(itemToDelete.id);
+        await deleteBlogCategory(itemToDelete.id);
+        await fetchCategories();
       }
     } catch (error) {
       console.error("Delete failed:", error);
     }
-    
     setDeleteDialogOpen(false);
   };
   
@@ -186,15 +185,30 @@ const AdminBlogPage = () => {
   
   const handleSubmitCategory = async (values: BlogCategoryInput) => {
     if (selectedCategory) {
-      await updateCategory(selectedCategory.id, values);
+      await updateBlogCategory(selectedCategory.id, values);
     } else {
-      await createCategory(values);
+      await createBlogCategory(values);
     }
+    await fetchCategories(); // Refresh categories after create/update
   };
   
+  // Helper to get selected category IDs for the edit form
   const getSelectedCategoryIds = () => {
     if (!selectedPost) return [];
-    return selectedPost.categories ? selectedPost.categories.map((cat: any) => cat.id) : [];
+    // If category_ids (array of IDs) exists, use it
+    if (Array.isArray(selectedPost.category_ids) && selectedPost.category_ids.length > 0) {
+      return selectedPost.category_ids.map(String);
+    }
+    // If category_names is present, map to IDs using categories from DB
+    if (Array.isArray(selectedPost.category_names) && selectedPost.category_names.length > 0) {
+      return selectedPost.category_names
+        .map((catName: string) => {
+          const match = categories.find((c) => c.name === catName);
+          return match ? String(match.id) : null;
+        })
+        .filter(Boolean);
+    }
+    return [];
   };
   
   const handleTabChange = (value: string) => {
@@ -205,9 +219,30 @@ const AdminBlogPage = () => {
     setIsRefreshing(true);
     try {
       await fetchPosts();
-      await fetchSupabasePosts();
+      await fetchCategories();
     } finally {
       setIsRefreshing(false);
+    }
+  };
+  
+  // Add updatePost and createPost using the PostgreSQL API
+  const updatePost = async (id: string, post: BlogPostInput, categoryIds: string[]) => {
+    try {
+      await apiClient.put(`/blog/posts/${id}`, { ...post, category_ids: categoryIds });
+      toast({ title: "Success", description: "Blog post updated successfully." });
+    } catch (err: any) {
+      toast({ title: "Error", description: "Failed to update blog post: " + (err.message || "Unknown error"), variant: "destructive" });
+      throw err;
+    }
+  };
+
+  const createPost = async (post: BlogPostInput, categoryIds: string[]) => {
+    try {
+      await apiClient.post(`/blog/posts`, { ...post, category_ids: categoryIds });
+      toast({ title: "Success", description: "Blog post created successfully." });
+    } catch (err: any) {
+      toast({ title: "Error", description: "Failed to create blog post: " + (err.message || "Unknown error"), variant: "destructive" });
+      throw err;
     }
   };
   
@@ -398,14 +433,18 @@ const AdminBlogPage = () => {
       
       {/* Post Form Dialog */}
       {isPostFormOpen && (
-        <BlogPostForm
-          post={selectedPost}
-          categories={categories}
-          selectedCategoryIds={getSelectedCategoryIds()}
-          isOpen={isPostFormOpen}
-          onClose={() => setIsPostFormOpen(false)}
-          onSubmit={handleSubmitPost}
-        />
+        isEditLoading ? (
+          <div className="flex items-center justify-center p-12">Loading post...</div>
+        ) : (
+          <BlogPostForm
+            post={selectedPost}
+            categories={categories.map(c => ({ ...c, created_at: "" }))}
+            selectedCategoryIds={getSelectedCategoryIds()}
+            isOpen={isPostFormOpen}
+            onClose={() => setIsPostFormOpen(false)}
+            onSubmit={handleSubmitPost}
+          />
+        )
       )}
       
       {/* Category Form Dialog */}

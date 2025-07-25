@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
@@ -192,6 +191,26 @@ export const useAdminFinanceData = () => {
     }
   };
 
+  // Soft delete promo code (set status to inactive and deleted_at to now)
+  const softDeletePromoCode = async (promoId: string) => {
+    try {
+      await apiClient.put(`/admin/promo-codes/${promoId}/soft-delete`, {});
+      await fetchPromoCodes();
+      toast({
+        title: "Promo code deleted",
+        description: "Promo code has been set to inactive.",
+        variant: "default"
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete promo code",
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
   const fetchAllData = async () => {
     try {
       setIsLoading(true);
@@ -227,6 +246,7 @@ export const useAdminFinanceData = () => {
     fetchSubscriptions,
     fetchPromoCodes,
     createPromoCode,
+    softDeletePromoCode,
     fetchAllData
   };
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AffiliateLayout from "@/components/affiliate/AffiliateLayout";
 import {
   Card,
@@ -16,8 +16,15 @@ import {
   Download,
   Twitter,
   MessageSquare,
+  Eye,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import DashboardPreview from "@/components/DashboardPreview";
 
 interface MarketingAssetProps {
   name: string;
@@ -30,10 +37,10 @@ interface MarketingAssetProps {
 const marketingAssets: MarketingAssetProps[] = [
   { name: "Homepage Banner", type: "PNG", size: "1200x628px", downloads: 124, previewUrl: "/lovable-uploads/img/MarketingAssets/Homepagebanner.png" },
   { name: "Profile Banner", type: "PNG", size: "800x600px", downloads: 98, previewUrl: "/lovable-uploads/img/MarketingAssets/ProfileBanner.png" },
-  { name: "Email Header", type: "JPG", size: "600x200px", downloads: 76, previewUrl: "/lovable-uploads/img/MarketingAssets/EmailHeader.png" },
-  { name: "Sidebar Ad", type: "PNG", size: "300x600px", downloads: 52, previewUrl: "https://placehold.co/300x600" },
-  { name: "Mobile Banner", type: "PNG", size: "320x100px", downloads: 47, previewUrl: "https://placehold.co/320x100" },
-  { name: "Square Social", type: "PNG", size: "1080x1080px", downloads: 118, previewUrl: "https://placehold.co/600x600" },
+  { name: "Email Header", type: "PNG", size: "600x200px", downloads: 76, previewUrl: "/lovable-uploads/img/MarketingAssets/EmailHeader.png" },
+  { name: "Sidebar Ad", type: "PNG", size: "300x600px", downloads: 52, previewUrl: "/lovable-uploads/img/MarketingAssets/SideAd.png" },
+  { name: "Mobile Banner", type: "PNG", size: "320x100px", downloads: 47, previewUrl: "/lovable-uploads/img/MarketingAssets/MobileBanner.png" },
+  { name: "Square Social", type: "PNG", size: "1080x1080px", downloads: 118, previewUrl: "/lovable-uploads/img/MarketingAssets/SquareSocial.png" },
 ];
 
 const emailTemplates = [
@@ -43,10 +50,11 @@ const emailTemplates = [
   { name: "Follow-up Sequence", type: "HTML", downloads: 57 },
 ];
 
+  
 const videoAssets = [
-  { name: "Product Demo", duration: "2:15", type: "MP4", downloads: 72 },
-  { name: "Customer Testimonial", duration: "1:45", type: "MP4", downloads: 53 },
-  { name: "Feature Overview", duration: "3:20", type: "MP4", downloads: 48 },
+  { name: "Product Demo", type: "MP4", downloads: 72, previewUrl: "https://drive.google.com/file/d/1Qu_ri-IaPemxNGdVnOOwJT-Y8ZfeNvD3/preview" },
+  { name: "Customer Testimonial", type: "MP4", downloads: 53, previewUrl: "https://drive.google.com/file/d/1DExO90zldik1UN4njIbpogchaIrHwrka/preview" },
+  { name: "Feature Overview", type: "MP4", downloads: 48, previewUrl: "https://drive.google.com/file/d/1_QQL5Vo0tYNnab1U8-b-v4vsM6cnhgrr/preview"},
 ];
 
 const socialCaptions = [
@@ -66,11 +74,14 @@ const downloadImage = (url: string, filename: string) => {
 
 const AssetCard = ({ asset }: { asset: MarketingAssetProps }) => (
   <Card className="overflow-hidden">
-    <img 
-      src={asset.previewUrl} 
-      alt={asset.name} 
-      className="w-full h-40 object-cover border-b border-gray-100"
-    />
+    <div style={{ maxHeight: "10rem", overflow: "auto" }}>
+      <img
+        src={asset.previewUrl}
+        alt={asset.name}
+        className="w-full object-cover border-b border-gray-100"
+        style={{ minHeight: "10rem" }}
+      />
+    </div>
     <CardContent className="p-4">
       <h3 className="font-medium mb-1">{asset.name}</h3>
       <div className="flex justify-between text-sm text-gray-500 mb-3">
@@ -89,6 +100,65 @@ const AssetCard = ({ asset }: { asset: MarketingAssetProps }) => (
 );
 
 const AffiliateMarketingPage = () => {
+  const [open, setOpen] = useState(false);
+  const [request, setRequest] = useState({ name: "", email: "", details: "" });
+  const [videoModal, setVideoModal] = useState<{ open: boolean; url: string; name: string }>({ open: false, url: "", name: "" });
+  const [activeTab, setActiveTab] = useState("banners");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setRequest({ ...request, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Send request to backend or email
+    setOpen(false);
+    setRequest({ name: "", email: "", details: "" });
+    alert("Your request has been submitted!");
+  };
+
+  const downloadAllImagesAsZip = async () => {
+    const zip = new JSZip();
+    const folder = zip.folder("marketing-assets");
+    // Download each image and add to zip
+    await Promise.all(
+      marketingAssets.map(async (asset) => {
+        const response = await fetch(asset.previewUrl);
+        const blob = await response.blob();
+        const ext = asset.type.toLowerCase();
+        folder?.file(
+          `${asset.name.replace(/\s+/g, "_").toLowerCase()}.${ext}`,
+          blob
+        );
+      })
+    );
+    const content = await zip.generateAsync({ type: "blob" });
+    saveAs(content, "marketing-assets.zip");
+  };
+
+  const downloadAllVideos = async () => {
+    // For Google Drive links, trigger download for each video
+    videoAssets.forEach((video) => {
+      const a = document.createElement("a");
+      a.href = video.previewUrl.replace("/preview", "?export=download");
+      a.download = `${video.name.replace(/\s+/g, "_").toLowerCase()}.mp4`;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  };
+
+  const downloadAllEmailTemplates = async () => {
+    // This is a placeholder; implement as needed for your app
+    alert("Bulk download for email templates is not implemented.");
+  };
+
+  const downloadAllSocialCaptions = async () => {
+    // This is a placeholder; implement as needed for your app
+    alert("Bulk download for social captions is not implemented.");
+  };
+
   return (
     <AffiliateLayout>
       <div className="space-y-6">
@@ -136,12 +206,58 @@ const AffiliateMarketingPage = () => {
                 <h3 className="font-medium">Need custom marketing materials?</h3>
                 <p className="text-sm text-gray-600">Contact our affiliate team for tailored assets</p>
               </div>
-              <Button variant="default" className="bg-[#1A237E]">Request Custom Asset</Button>
+              <Button variant="default" className="bg-[#1A237E]" onClick={() => setOpen(true)}>
+                Request Custom Asset
+              </Button>
             </div>
+            {/* Modal */}
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogContent>
+                <DialogHeader>
+                
+                  <DialogTitle>Request Custom Marketing Asset</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
+                    name="name"
+                    placeholder="Your Name"
+                    value={request.name}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Input
+                    name="email"
+                    type="email"
+                    placeholder="Your Email"
+                    value={request.email}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Textarea
+                    name="details"
+                    placeholder="Describe your custom asset needs..."
+                    value={request.details}
+                    onChange={handleChange}
+                    required
+                  />
+                  <DialogFooter>
+                  <div className="flex items-center w-full">
+                  <img
+                    src="/lovable-uploads/img/logo/updatedlogo1.png"
+                    alt="Professional AI Assistants"
+                    className="h-10 mr-3"
+                    style={{ marginLeft: 0 }}
+                  />
+                  </div>
+                    <Button type="submit" className="bg-[#1A237E]">Submit Request</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
         
-        <Tabs defaultValue="banners">
+        <Tabs defaultValue="banners" onValueChange={setActiveTab}>
           <div className="flex justify-between items-center mb-4">
             <TabsList>
               <TabsTrigger value="banners">Banners</TabsTrigger>
@@ -151,7 +267,15 @@ const AffiliateMarketingPage = () => {
             </TabsList>
             
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (activeTab === "banners") downloadAllImagesAsZip();
+                  else if (activeTab === "video") downloadAllVideos();
+                  else if (activeTab === "email") downloadAllEmailTemplates();
+                  else if (activeTab === "social") downloadAllSocialCaptions();
+                }}
+              >
                 <Download className="h-4 w-4 mr-1" /> Download All
               </Button>
             </div>
@@ -167,6 +291,7 @@ const AffiliateMarketingPage = () => {
           
           <TabsContent value="email" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
               {emailTemplates.map((template, index) => (
                 <Card key={index}>
                   <CardContent className="p-4 flex items-center justify-between">
@@ -193,24 +318,64 @@ const AffiliateMarketingPage = () => {
               {videoAssets.map((video, index) => (
                 <Card key={index}>
                   <div className="relative bg-gray-100 h-40 flex items-center justify-center">
-                    <FileVideo className="h-12 w-12 text-gray-400" />
-                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs py-0.5 px-2 rounded">
-                      {video.duration}
-                    </div>
+                    {video.previewUrl ? (
+                      <>
+                        {/* Only render iframe if this video is NOT open in the modal */}
+                        {!(videoModal.open && videoModal.url === video.previewUrl) && (
+                          <iframe
+                            src={video.previewUrl}
+                            allow="autoplay"
+                            allowFullScreen
+                            style={{ width: "100%", height: "100%" }}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100 transition"
+                          title="Preview Video"
+                          onClick={() => setVideoModal({ open: true, url: video.previewUrl, name: video.name })}
+                        >
+                          <Eye className="h-5 w-5 text-[#1A237E]" />
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-1">{video.name}</h3>
-                    <div className="flex justify-between text-sm text-gray-500 mb-3">
-                      <span>{video.type}</span>
-                      <span>{video.downloads} downloads</span>
-                    </div>
-                    <Button size="sm" className="w-full">
-                      <Download className="h-4 w-4 mr-1" /> Download
-                    </Button>
-                  </CardContent>
+                      <h3 className="font-medium mb-1">{video.name}</h3>
+                      <div className="flex justify-between text-sm text-gray-500 mb-3">
+                        <span>{video.type}</span>
+                        <span>{video.downloads} downloads</span>
+                      </div>
+                      <Button size="sm" className="w-full" asChild>
+                        <a
+                          href={video.previewUrl.replace("/preview", "?export=download")}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Download className="h-4 w-4 mr-1" /> Download
+                        </a>
+                      </Button>
+                    </CardContent>
                 </Card>
               ))}
             </div>
+            {/* Video Modal */}
+            <Dialog open={videoModal.open} onOpenChange={open => setVideoModal(v => ({ ...v, open }))}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{videoModal.name}</DialogTitle>
+                </DialogHeader>
+                <div className="w-full aspect-video">
+                  <iframe
+                    src={videoModal.url}
+                    allow="autoplay"
+                    allowFullScreen
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
           
           <TabsContent value="social" className="mt-0">

@@ -1,138 +1,75 @@
+import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { API_BASE_URL } from "@/lib/config";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TableFilters } from "./TableFilters";
-import { useAdminActivity } from "@/hooks/useAdminActivity";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+interface AdminActivity {
+  id: string;
+  event_type: string;
+  performed_by_email: string;
+  details: string;
+  timestamp: string;
+  ip_address: string;
+}
 
-export const RecentActivity = () => {
-  const {
-    activities,
-    isLoading,
-    error,
-    searchTerm,
-    setSearchTerm,
-    eventTypeFilter,
-    setEventTypeFilter,
-    adminFilter,
-    setAdminFilter,
-    sortBy,
-    setSortBy,
-    sortDirection,
-    setSortDirection,
-    dateRange,
-    setDateRange,
-    clearFilters,
-    uniqueEventTypes,
-    uniqueAdmins
-  } = useAdminActivity();
+export function RecentActivity() {
+  const [activities, setActivities] = useState<AdminActivity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center py-8">
-            <LoadingSpinner size="lg" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/analytics/admin-activity`);
+        if (!response.ok) throw new Error('Failed to fetch activities');
+        const data = await response.json();
+        setActivities(data);
+      } catch (error) {
+        console.error('Failed to fetch activities:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-red-500">
-            Error loading activities: {error}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const sortOptions = [
-    { value: 'timestamp', label: 'Time' },
-    { value: 'event_type', label: 'Event Type' },
-    { value: 'performed_by_email', label: 'Admin' },
-    { value: 'ip_address', label: 'IP Address' }
-  ];
-
-  const filters = [
-    {
-      key: 'event_type',
-      label: 'Event Type',
-      value: eventTypeFilter,
-      options: [
-        { value: 'all', label: 'All Events' },
-        ...uniqueEventTypes.map(type => ({ value: type, label: type }))
-      ],
-      onChange: setEventTypeFilter
-    },
-    {
-      key: 'admin',
-      label: 'Admin',
-      value: adminFilter,
-      options: [
-        { value: 'all', label: 'All Admins' },
-        ...uniqueAdmins.map(admin => ({ value: admin, label: admin }))
-      ],
-      onChange: setAdminFilter
-    }
-  ];
+    fetchActivities();
+  }, []);
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <TableFilters
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
-          sortValue={sortBy}
-          onSortChange={setSortBy}
-          sortDirection={sortDirection}
-          onSortDirectionChange={setSortDirection}
-          sortOptions={sortOptions}
-          filters={filters}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          onClearFilters={clearFilters}
-          searchPlaceholder="Search activities, admins, IP addresses..."
-        />
-        
-        <div className="space-y-4">
-          {activities.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No activities found matching your filters
-            </div>
-          ) : (
-            activities.map((activity) => (
-              <div key={activity.id} className="flex items-start justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline">{activity.event_type}</Badge>
-                    <span className="text-sm text-gray-500">by {activity.performed_by_email}</span>
-                  </div>
-                  <p className="text-sm">{activity.details}</p>
-                  <div className="flex gap-4 mt-2 text-xs text-gray-400">
-                    <span>IP: {activity.ip_address}</span>
-                    <span>{new Date(activity.timestamp).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </CardContent>
+      <div className="p-6">
+        <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Event Type</TableHead>
+              <TableHead>Admin</TableHead>
+              <TableHead>Details</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>IP Address</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+              </TableRow>
+            ) : activities.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">No admin activity found</TableCell>
+              </TableRow>
+            ) : (
+              activities.map((activity) => (
+                <TableRow key={activity.id}>
+                  <TableCell>{activity.event_type}</TableCell>
+                  <TableCell>{activity.performed_by_email}</TableCell>
+                  <TableCell>{activity.details}</TableCell>
+                  <TableCell>{new Date(activity.timestamp).toLocaleString()}</TableCell>
+                  <TableCell>{activity.ip_address}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
-};
+}

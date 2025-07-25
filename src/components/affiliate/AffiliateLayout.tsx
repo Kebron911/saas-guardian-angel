@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -31,6 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAffiliateUser } from "@/hooks/affiliate/affiliatelayout";
+
 
 interface AffiliateLayoutProps {
   children: React.ReactNode;
@@ -41,6 +42,7 @@ const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
   const navigate = useNavigate();
   const { setRole, signOut } = useAuth();
   const { toast } = useToast();
+  const { loading, updateProfile, ...affiliateUser } = useAffiliateUser();
   
   const menuItems = [
     { 
@@ -102,7 +104,7 @@ const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
       <Layout>
         <LayoutSidebar className="fixed top-0 left-0 h-screen w-64 bg-card shadow-md z-40">
           <div className="py-6 px-4">
-            <Link to="/" className="flex items-center font-bold text-[20px] text-foreground mb-10">
+            <Link to="#" className="flex items-center font-bold text-[20px] text-foreground mb-10">
               <img src="/lovable-uploads/img/logo/updatedlogo1.png" 
                 alt="Professional AI Assistants" 
                 className="h-10 mr-3 " style={{ width: 'auto', height: '3rem' }}
@@ -141,12 +143,23 @@ const AffiliateLayout = ({ children }: AffiliateLayoutProps) => {
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
             <div className="flex items-center">
               <Avatar className="h-9 w-9">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>AF</AvatarFallback>
+                <AvatarImage src={affiliateUser.avatar} />
+                <AvatarFallback>
+                  {loading ? "..." : affiliateUser.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                </AvatarFallback>
               </Avatar>
               <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium">John Smith</p>
-                <p className="text-xs text-gray-500 truncate">Affiliate Partner</p>
+                <p className="text-sm font-medium">
+                  {loading ? "Loading..." : affiliateUser.name}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {loading ? "..." : affiliateUser.role}
+                </p>
               </div>
             </div>
           </div>

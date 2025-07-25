@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import BlogHeader from "@/components/BlogHeader";
@@ -6,7 +5,6 @@ import BlogPosts from "@/components/BlogPosts";
 import BlogSidebar from "@/components/BlogSidebar";
 import BlogNewsletter from "@/components/BlogNewsletter";
 import BlogFooter from "@/components/BlogFooter";
-import { Link } from "react-router-dom";
 
 const BlogPage = () => {
   useEffect(() => {
@@ -23,19 +21,6 @@ const BlogPage = () => {
           <BlogPosts />
           <aside>
             <BlogSidebar />
-            {/* Admin link for quick access */}
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg dark:bg-blue-900/30">
-              <h3 className="text-lg font-semibold mb-2">Admin Access</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Manage your blog content through the admin panel.
-              </p>
-              <Link 
-                to="/admin/blog" 
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                Go to Blog Admin →
-              </Link>
-            </div>
           </aside>
         </div>
         <BlogNewsletter />

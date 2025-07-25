@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import AffiliateLayout from "@/components/affiliate/AffiliateLayout";
 import {
   Card,
@@ -36,6 +35,9 @@ import {
 } from "lucide-react";
 
 const AffiliateSettingsPage = () => {
+  // Add state for vanity URL
+  const [vanityUrl, setVanityUrl] = useState("john12344");
+
   return (
     <AffiliateLayout>
       <div className="space-y-6">
@@ -260,7 +262,15 @@ const AffiliateSettingsPage = () => {
                     <Label htmlFor="vanity-url">Custom Vanity URL</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex-shrink-0 text-gray-500">ai-assistants.com/ref/</div>
-                      <Input id="vanity-url" defaultValue="john123" className="flex-1" />
+                      <Input
+                        id="vanity-url"
+                        value={vanityUrl}
+                        onChange={e => {
+                          setVanityUrl(e.target.value);
+                          localStorage.setItem("affiliateVanityUrl", e.target.value);
+                        }}
+                        className="flex-1"
+                      />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       Customize the end of your referral link with a memorable name

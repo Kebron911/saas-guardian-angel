@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card } from "@/components/ui/card";
@@ -18,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSupportTickets } from '@/hooks/useSupportTickets';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/lib/api-client";
 
 interface FilterState {
   search: string;
@@ -39,6 +40,12 @@ const AdminSupportPage = () => {
     assignedAdmin: 'all',
     dateRange: 'all'
   });
+  const [editTicket, setEditTicket] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState<any | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<any | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Get unique users for filter dropdown
   const uniqueUsers = Array.from(new Set(
@@ -147,6 +154,100 @@ const AdminSupportPage = () => {
     });
   };
 
+  const openEditDialog = (ticket: any) => {
+    setEditTicket(ticket);
+    setEditForm({ ...ticket });
+    setSaveError(null);
+  };
+  const closeEditDialog = () => {
+    setEditTicket(null);
+    setEditForm(null);
+    setSaveError(null);
+  };
+  const handleEditChange = (key: string, value: any) => {
+    setEditForm((prev: any) => ({ ...prev, [key]: value }));
+  };
+  const saveEdit = async () => {
+    if (!editForm) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      // Only send user_email and assigned_admin (emails), not IDs
+      const payload = {
+        user_email: editForm.user_email,
+        subject: editForm.subject,
+        message: editForm.message,
+        status: editForm.status,
+        priority: editForm.priority,
+        assigned_admin: editForm.assigned_admin || null,
+        comments: editForm.comments || "",
+        closed_at: editForm.closed_at || null
+      };
+      const res = await fetch(`${API_BASE_URL}/admin/support-tickets/${editForm.ticket_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to save ticket");
+      closeEditDialog();
+      // Optionally refresh tickets here
+      window.location.reload();
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to save ticket");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openCreateDialog = () => {
+    setCreateForm({
+      subject: '',
+      user_email: '',
+      assigned_admin: '',
+      priority: 'medium',
+      status: 'open',
+      message: ''
+    });
+    setCreateOpen(true);
+  };
+  const closeCreateDialog = () => {
+    setCreateOpen(false);
+    setCreateForm(null);
+  };
+  const handleCreateChange = (key: string, value: any) => {
+    setCreateForm((prev: any) => ({ ...prev, [key]: value }));
+  };
+  const saveCreate = async () => {
+    if (!createForm) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      // Only send user_email and assigned_admin (emails), not IDs
+      const payload = {
+        user_email: createForm.user_email,
+        subject: createForm.subject,
+        message: createForm.message,
+        status: createForm.status,
+        priority: createForm.priority,
+        assigned_admin: createForm.assigned_admin || null,
+        comments: createForm.comments || "",
+        closed_at: createForm.closed_at || null
+      };
+      const res = await fetch(`${API_BASE_URL}/admin/support-tickets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to create ticket");
+      closeCreateDialog();
+      window.location.reload();
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to create ticket");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="mb-6">
@@ -155,6 +256,10 @@ const AdminSupportPage = () => {
       </div>
 
       <div className="flex flex-col space-y-4 mb-6">
+        {/* Add Create New Ticket Button */}
+        <div className="flex justify-end mb-2">
+          <Button onClick={openCreateDialog} variant="default">Create New Ticket</Button>
+        </div>
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -271,20 +376,21 @@ const AdminSupportPage = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Last Updated</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Assigned Admin</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Priority</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4">Loading tickets...</td>
+                  <td colSpan={8} className="text-center py-4">Loading tickets...</td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4 text-red-500">{error}</td>
+                  <td colSpan={8} className="text-center py-4 text-red-500">{error}</td>
                 </tr>
               ) : filteredTickets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4">
+                  <td colSpan={8} className="text-center py-4">
                     {filters.search || filters.status !== 'all' || filters.priority !== 'all' || filters.user !== 'all' || filters.assignedAdmin !== 'all' || filters.dateRange !== 'all' 
                       ? 'No tickets match your current filters' 
                       : 'No tickets found'}
@@ -318,6 +424,11 @@ const AdminSupportPage = () => {
                         {ticket.priority}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <Button size="sm" variant="outline" onClick={() => openEditDialog(ticket)}>
+                        Edit
+                      </Button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -325,6 +436,103 @@ const AdminSupportPage = () => {
           </table>
         </div>
       </Card>
+
+      <Dialog open={!!editTicket} onOpenChange={closeEditDialog}>
+        <DialogContent style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+          <DialogHeader>
+            <DialogTitle>Edit Support Ticket</DialogTitle>
+          </DialogHeader>
+          {editForm && (
+            <form className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">Subject</label>
+                <Input value={editForm.subject} onChange={e => handleEditChange('subject', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">User Email</label>
+                <Input value={editForm.user_email} onChange={e => handleEditChange('user_email', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Assigned Admin</label>
+                <Input value={editForm.assigned_admin || ''} onChange={e => handleEditChange('assigned_admin', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Priority</label>
+                <Input value={editForm.priority} onChange={e => handleEditChange('priority', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Status</label>
+                <Input value={editForm.status} onChange={e => handleEditChange('status', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Message</label>
+                <textarea className="w-full border rounded p-2" rows={4} value={editForm.message} onChange={e => handleEditChange('message', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Comments</label>
+                <textarea className="w-full border rounded p-2" rows={4} value={editForm.comments || ''} onChange={e => handleEditChange('comments', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Closed Date</label>
+                <Input type="datetime-local" value={editForm.closed_at ? new Date(editForm.closed_at).toISOString().slice(0,16) : ''} onChange={e => handleEditChange('closed_at', e.target.value ? new Date(e.target.value).toISOString() : null)} />
+              </div>
+              {saveError && <div className="text-red-500 text-sm">{saveError}</div>}
+            </form>
+          )}
+          <DialogFooter>
+            <Button onClick={saveEdit} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+            <Button variant="outline" onClick={closeEditDialog}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={createOpen} onOpenChange={closeCreateDialog}>
+        <DialogContent style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+          <DialogHeader>
+            <DialogTitle>Create New Support Ticket</DialogTitle>
+          </DialogHeader>
+          {createForm && (
+            <form className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">Subject</label>
+                <Input value={createForm.subject} onChange={e => handleCreateChange('subject', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">User Email</label>
+                <Input value={createForm.user_email} onChange={e => handleCreateChange('user_email', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Assigned Admin</label>
+                <Input value={createForm.assigned_admin || ''} onChange={e => handleCreateChange('assigned_admin', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Priority</label>
+                <Input value={createForm.priority} onChange={e => handleCreateChange('priority', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Status</label>
+                <Input value={createForm.status} onChange={e => handleCreateChange('status', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Message</label>
+                <textarea className="w-full border rounded p-2" rows={4} value={createForm.message} onChange={e => handleCreateChange('message', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Comments</label>
+                <textarea className="w-full border rounded p-2" rows={4} value={createForm.comments || ''} onChange={e => handleCreateChange('comments', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Closed Date</label>
+                <Input type="datetime-local" value={createForm.closed_at ? new Date(createForm.closed_at).toISOString().slice(0,16) : ''} onChange={e => handleCreateChange('closed_at', e.target.value ? new Date(e.target.value).toISOString() : null)} />
+              </div>
+              {saveError && <div className="text-red-500 text-sm">{saveError}</div>}
+            </form>
+          )}
+          <DialogFooter>
+            <Button onClick={saveCreate} disabled={saving}>{saving ? "Saving..." : "Create"}</Button>
+            <Button variant="outline" onClick={closeCreateDialog}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

@@ -8,61 +8,61 @@ import { Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLoginUser } from "@/hooks/login/loginUser"; // Import your hook
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { setRole, checkUserRole } = useAuth();
+  const { setRole } = useAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Validate email format
-    const predefinedUsers = {
-      "user@example.com": { role: "user", route: "/dashboard" },
-      "admin@example.com": { role: "admin", route: "/admin" },
-      "affiliate@example.com": { role: "affiliate", route: "/affiliate" },
-    };
+  const { user, isLoading: hookLoading, error, login } = useLoginUser(); // Use your hook
 
-    try {
-      // Check if the email matches one of our predefined users
-      if (Object.keys(predefinedUsers).includes(email)) {
-        // Set the role based on the email
-        const userInfo = predefinedUsers[email as keyof typeof predefinedUsers];
-        const userRole = userInfo.role as "user" | "admin" | "affiliate";
-        const userRoute = userInfo.route;
-        
-        setRole(userRole);
+  React.useEffect(() => {
+    if (user) {
+      setRole(user.role);
+      sessionStorage.setItem("userId", user.id);
+      toast({
+        title: "Login successful",
+        description: `Logged in as ${user.role}`,
+      });
+      window.alert("Database connected successfully!");
+      navigate(user.role === "affiliate" ? "/affiliate" : "/dashboard");
+    }
+    if (error) {
+      // Predefined demo users (fallback)
+      const predefinedUsers: Record<string, { role: string; route: string }> = {
+        "user@example.com": { role: "user", route: "/dashboard" },
+        "admin@example.com": { role: "admin", route: "/admin" },
+        "affiliate@example.com": { role: "affiliate", route: "/affiliate" },
+      };
+      if (predefinedUsers[email]) {
+        setRole(predefinedUsers[email].role);
         
         toast({
-          title: "Login successful",
-          description: `Logged in as ${userRole}`,
+          title: "Demo Login",
+          description: `Logged in as ${predefinedUsers[email].role} (demo)`,
         });
-        
-        // Navigate to the appropriate dashboard
-        navigate(userRoute);
+        //window.alert("Demo user login (database not used).");
+        navigate(predefinedUsers[email].route);
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid credentials. Try user@example.com, admin@example.com, or affiliate@example.com",
+          description: error,
           variant: "destructive"
         });
       }
-    } catch (error) {
-      toast({
-        title: "Login error",
-        description: "An error occurred while logging in",
-        variant: "destructive"
-      });
-      console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
     }
+  }, [user, error, setRole, toast, navigate, email]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    await login(email, password); // Call the hook's login function
+    setIsLoading(false);
   };
 
   return (

@@ -1,10 +1,17 @@
-
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from postgreSQL.metrics import analytics  # Updated import path
 from postgreSQL.blog import posts  # Import blog posts router
+from postgreSQL.blog import categories  # Import blog categories router
 from postgreSQL.admin import users  # Import admin users router
+from postgreSQL.login_user import login
+from postgreSQL.affiliate import userslayout # Import users layout router
+from postgreSQL.admin import referral_settings
+from postgreSQL.admin import finance_settings
+from postgreSQL.admin import global_settings, invoice_settings, system_settings, email_settings
+
+
 
 # Import referrals router with explicit error handling
 try:
@@ -59,8 +66,20 @@ def health_check():
 
 # Include the routers with prefix
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+app.include_router(analytics.router, prefix="/admin", tags=["admin-support"])
 app.include_router(posts.router, prefix="/blog", tags=["blog"])
+app.include_router(categories.router, prefix="/blog", tags=["blog-categories"])
+logger.info("Blog categories router included successfully")
 app.include_router(users.router, prefix="/admin", tags=["admin"])
+app.include_router(login.router)  # No prefix, so /api/login is available
+app.include_router(userslayout.router)
+app.include_router(referral_settings.router, prefix="/admin", tags=["admin-referral-settings"])
+app.include_router(finance_settings.router, prefix="/admin", tags=["admin-finance-settings"])
+app.include_router(global_settings.router, prefix="/admin", tags=["admin-global-settings"])
+app.include_router(invoice_settings.router, prefix="/admin", tags=["admin-invoice-settings"])
+app.include_router(system_settings.router, prefix="/admin", tags=["admin-system-settings"])
+app.include_router(email_settings.router, prefix="/admin", tags=["admin-email-settings"])
+
 
 # Include referrals router only if it was imported successfully
 if referrals_router_available:
@@ -100,6 +119,9 @@ def debug_routes():
 @app.get("/admin/test-referrals")
 def test_referrals():
     return {"message": "Referrals router is working"}
+
+
+
 
 if __name__ == "__main__":
     try:

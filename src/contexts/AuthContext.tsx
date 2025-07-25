@@ -17,6 +17,7 @@ interface AuthContextType {
   isAffiliate: boolean;
   applyForAffiliate: () => Promise<void>;
   checkUserRole: () => Promise<Role>;
+  updateUser: (id: string, email: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,6 +100,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return 'user';
   };
 
+  // Add a function to update user based on input
+  const updateUser = (id: string, email: string) => {
+    setUser({
+      id,
+      email,
+    });
+  };
+
   return (
     <AuthContext.Provider value={{ 
       role, 
@@ -108,7 +117,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signOut,
       isAffiliate,
       applyForAffiliate,
-      checkUserRole
+      checkUserRole,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>
@@ -122,3 +132,7 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Usage example elsewhere in your app:
+// const { updateUser } = useAuth();
+// updateUser("new-id", "new@email.com");

@@ -1,11 +1,11 @@
-
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from postgreSQL.database import DatabaseInterface
 from postgreSQL.helpers import get_month_range
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 import logging
+from postgreSQL.admin.activity_log import log_admin_activity
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -18,31 +18,29 @@ class AdminUserCreate(BaseModel):
 class AdminUserUpdate(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
+    status: Optional[str] = None
+    password: Optional[str] = None
 
 def get_all_admin_users() -> List[Dict[str, Any]]:
     """Get all users from the database with role information"""
     try:
         logger.debug("Fetching all users from PostgreSQL")
         
-        # Get users with their roles
+        # Get users with their roles from user_roles table
         query = """
         SELECT 
             u.id,
             u.id as user_id,
             u.email,
             u.email as name,
-            COALESCE(
-                CASE 
-                    WHEN a.id IS NOT NULL THEN 'affiliate'
-                    ELSE 'user'
-                END, 'user'
-            ) as role,
+            COALESCE(ur.role::text, CASE WHEN a.id IS NOT NULL THEN 'affiliate' ELSE 'user' END, 'user') as role,
             CASE 
                 WHEN u.deleted_at IS NULL THEN 'active'
                 ELSE 'inactive'
             END as status,
             u.created_at
         FROM users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN affiliates a ON u.id = a.user_id
         WHERE u.deleted_at IS NULL
         ORDER BY u.created_at DESC
@@ -171,7 +169,7 @@ def get_user_stats() -> Dict[str, Any]:
         logger.error(f"Error calculating user stats: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-def create_admin_user(user_data: AdminUserCreate) -> Dict[str, Any]:
+def create_admin_user(user_data: AdminUserCreate, request: Request) -> Dict[str, Any]:
     """Create a new user"""
     try:
         logger.debug(f"Creating user: {user_data.email}")
@@ -196,6 +194,16 @@ def create_admin_user(user_data: AdminUserCreate) -> Dict[str, Any]:
             raise HTTPException(status_code=500, detail="Failed to create user")
         
         user = user_result[0]
+
+        # Insert user role into user_roles table
+        role_insert_query = """
+        INSERT INTO user_roles (user_id, role, created_at, updated_at)
+        VALUES (%s, %s, NOW(), NOW())
+        """
+        DatabaseInterface.execute_query(
+            role_insert_query,
+            (user['id'], user_data.role)
+        )
         
         # If role is affiliate, create affiliate record
         if user_data.role == "affiliate":
@@ -213,6 +221,16 @@ def create_admin_user(user_data: AdminUserCreate) -> Dict[str, Any]:
                 (user['id'], ref_code, 0.15)  # Default 15% commission
             )
         
+        # Log admin activity
+        admin_id = getattr(request.state.user, "id", None) if hasattr(request.state, "user") else None
+        log_admin_activity(
+            event_type='create_admin_user',
+            performed_by=admin_id,
+            details=f"Created admin user: {user_data.email}",
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+
         new_user = {
             "id": str(user['id']),
             "user_id": str(user['id']),
@@ -231,13 +249,63 @@ def create_admin_user(user_data: AdminUserCreate) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/users")
-async def api_get_admin_users():
-    """API endpoint to get all users"""
+async def api_get_admin_users(
+    role: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    from_: Optional[str] = Query(None, alias="from"),
+    to: Optional[str] = Query(None)
+):
+    """API endpoint to get all users with optional filters"""
     logger.info("API endpoint GET /admin/users called")
     try:
-        result = get_all_admin_users()
-        logger.info(f"Successfully returning {len(result)} users")
-        return result
+        base_query = """
+        SELECT 
+            u.id,
+            u.id as user_id,
+            u.email,
+            u.email as name,
+            COALESCE(ur.role::text, CASE WHEN a.id IS NOT NULL THEN 'affiliate' ELSE 'user' END, 'user') as role,
+            CASE 
+                WHEN u.deleted_at IS NULL THEN 'active'
+                ELSE 'inactive'
+            END as status,
+            u.created_at
+        FROM users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id
+        LEFT JOIN affiliates a ON u.id = a.user_id
+        WHERE 1=1
+        """
+        params = []
+        if role and role != "all":
+            base_query += " AND (COALESCE(ur.role, CASE WHEN a.id IS NOT NULL THEN 'affiliate' ELSE 'user' END, 'user') = %s) "
+            params.append(role)
+        if status and status != "all":
+            if status == "suspended":
+                base_query += " AND u.deleted_at IS NOT NULL "
+            else:
+                base_query += " AND (CASE WHEN u.deleted_at IS NULL THEN 'active' ELSE 'inactive' END) = %s "
+                params.append(status)
+        if from_:
+            base_query += " AND u.created_at >= %s "
+            params.append(from_)
+        if to:
+            base_query += " AND u.created_at <= %s "
+            params.append(to)
+        base_query += " ORDER BY u.created_at DESC"
+        result = DatabaseInterface.execute_query(base_query, tuple(params))
+        users = []
+        for row in result:
+            users.append({
+                "id": str(row['id']),
+                "user_id": str(row['user_id']),
+                "name": row['name'] or row['email'],
+                "email": row['email'],
+                "role": row['role'],
+                "status": row['status'],
+                "created_at": row['created_at'].isoformat() if row['created_at'] else None
+            })
+        logger.info(f"Successfully returning {len(users)} users")
+        return users
     except Exception as e:
         logger.error(f"Error in api_get_admin_users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -255,11 +323,11 @@ async def api_get_user_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/users")
-async def api_create_admin_user(user: AdminUserCreate):
+async def api_create_admin_user(user: AdminUserCreate, request: Request):
     """API endpoint to create a new user"""
     logger.info("API endpoint POST /admin/users called")
     try:
-        result = create_admin_user(user)
+        result = create_admin_user(user, request)
         logger.info(f"Successfully created user: {result['id']}")
         return result
     except Exception as e:
@@ -267,19 +335,59 @@ async def api_create_admin_user(user: AdminUserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/users/{user_id}")
-async def api_update_admin_user(user_id: str, updates: AdminUserUpdate):
+async def api_update_admin_user(user_id: str, updates: AdminUserUpdate, request: Request):
     """API endpoint to update a user"""
     logger.info(f"API endpoint POST /admin/users/{user_id} called")
     try:
         logger.info(f"Updating user {user_id} with {updates}")
-        # For now, return success
+        # Update user fields
+        if updates.email:
+            update_query = """
+            UPDATE users SET email = %s, updated_at = NOW() WHERE id = %s
+            """
+            DatabaseInterface.execute_query(update_query, (updates.email, user_id))
+        if updates.password:
+            import hashlib
+            password_hash = hashlib.sha256(updates.password.encode()).hexdigest()
+            update_query = """
+            UPDATE users SET password_hash = %s, updated_at = NOW() WHERE id = %s
+            """
+            DatabaseInterface.execute_query(update_query, (password_hash, user_id))
+        if updates.role:
+            # Update user_roles table
+            update_role_query = """
+            UPDATE user_roles SET role = %s, updated_at = NOW() WHERE user_id = %s
+            """
+            DatabaseInterface.execute_query(update_role_query, (updates.role, user_id))
+        if updates.status:
+            if updates.status == "active":
+                # Reactivate user
+                reactivate_query = """
+                UPDATE users SET deleted_at = NULL, updated_at = NOW() WHERE id = %s
+                """
+                DatabaseInterface.execute_query(reactivate_query, (user_id,))
+            elif updates.status == "inactive":
+                # Soft delete user
+                deactivate_query = """
+                UPDATE users SET deleted_at = NOW(), updated_at = NOW() WHERE id = %s
+                """
+                DatabaseInterface.execute_query(deactivate_query, (user_id,))
+        # Log admin activity
+        admin_id = getattr(request.state.user, "id", None) if hasattr(request.state, "user") else None
+        log_admin_activity(
+            event_type='update_admin_user',
+            performed_by=admin_id,
+            details=f"Updated admin user: {user_id}",
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
         return {"message": "User updated successfully", "user_id": user_id}
     except Exception as e:
         logger.error(f"API error updating user: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/users/{user_id}")
-async def api_delete_admin_user(user_id: str):
+async def api_delete_admin_user(user_id: str, request: Request):
     """API endpoint to delete a user (soft delete)"""
     logger.info(f"API endpoint DELETE /admin/users/{user_id} called")
     try:
@@ -291,6 +399,16 @@ async def api_delete_admin_user(user_id: str):
         """
         
         DatabaseInterface.execute_query(delete_query, (user_id,))
+        
+        # Log admin activity
+        admin_id = getattr(request.state.user, "id", None) if hasattr(request.state, "user") else None
+        log_admin_activity(
+            event_type='delete_admin_user',
+            performed_by=admin_id,
+            details=f"Deleted admin user: {user_id}",
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
         logger.info(f"Successfully soft-deleted user {user_id}")
         return {"message": "User deleted successfully", "user_id": user_id}
     except Exception as e:

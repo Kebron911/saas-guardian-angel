@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminDashboardStats {
@@ -54,74 +54,21 @@ export const useAdminDashboardData = () => {
         setIsLoading(true);
         setError(null);
         
-        console.log("Fetching admin dashboard data from Supabase...");
+        // Fetch dashboard stats
+        const statsData = await apiClient.get('/admin/dashboard-stats');
+        setStats(statsData);
         
-        // Fetch users count
-        const { count: usersCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
+        // Fetch revenue data (last 6 months)
+        const revenueResult = await apiClient.get('/admin/revenue-chart');
+        setRevenueData(revenueResult);
         
-        // Fetch affiliates count
-        const { count: affiliatesCount } = await supabase
-          .from('affiliates')
-          .select('*', { count: 'exact', head: true });
+        // Fetch subscription distribution
+        const subscriptionResult = await apiClient.get('/admin/subscription-chart');
+        setSubscriptionsData(subscriptionResult);
         
-        // Fetch active subscriptions count
-        const { count: subscriptionsCount } = await supabase
-          .from('subscriptions')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
-        
-        // Calculate commission from referrals
-        const { data: referralsData } = await supabase
-          .from('referrals')
-          .select('commission_amount')
-          .eq('status', 'converted');
-        
-        const totalCommissions = referralsData?.reduce(
-          (sum, r) => sum + (r.commission_amount || 0), 0
-        ) || 0;
-        
-        setStats({
-          total_users: usersCount || 0,
-          total_affiliates: affiliatesCount || 0,
-          active_subscriptions: subscriptionsCount || 0,
-          monthly_revenue: 0, // Can be calculated from actual revenue data when available
-          commissions_paid: totalCommissions,
-          open_tickets: 0 // Can be calculated from support tickets when available
-        });
-        
-        // Generate sample revenue data for the chart
-        const sampleRevenue = [];
-        const now = new Date();
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-          sampleRevenue.push({
-            name: monthName,
-            revenue: Math.floor(Math.random() * 10000) + 5000
-          });
-        }
-        setRevenueData(sampleRevenue);
-        
-        // Generate sample subscription data
-        setSubscriptionsData([
-          { name: "Basic", value: 45, color: "#3B82F6" },
-          { name: "Pro", value: 30, color: "#10B981" },
-          { name: "Premium", value: 25, color: "#8B5CF6" }
-        ]);
-        
-        // Generate sample activity data
-        setActivityData([
-          {
-            id: "1",
-            event_type: "user_created",
-            performed_by_email: "admin@example.com",
-            details: "New user account created",
-            timestamp: new Date().toISOString(),
-            ip_address: "192.168.1.1"
-          }
-        ]);
+        // Fetch recent admin activity
+        const activityResult = await apiClient.get('/admin/admin-activity');
+        setActivityData(activityResult);
         
       } catch (err: any) {
         console.error("Error fetching admin dashboard data:", err);
